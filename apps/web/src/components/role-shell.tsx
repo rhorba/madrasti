@@ -5,19 +5,21 @@ import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 
 /**
- * The shell every signed-in screen sits in.
+ * The chrome every signed-in screen sits in: identity, language, sign out.
  *
- * Deliberately plain for now — the navigation proper arrives with the screens
- * that need it (Sprint 3 onward). What matters here is that it is built from
- * logical properties throughout, so it mirrors under RTL for free.
+ * Built from logical properties throughout, so it mirrors under RTL for free.
+ * Pages supply their own `PageHeader` — the shell does not own the title,
+ * because a title often needs an action beside it.
  */
 export async function RoleShell({
   session,
+  nav,
   title,
   children,
 }: {
   session: AppSession;
-  title: string;
+  nav?: ReactNode;
+  title?: string;
   children: ReactNode;
 }) {
   const t = await getTranslations();
@@ -37,9 +39,11 @@ export async function RoleShell({
         </div>
       </header>
 
+      {nav}
+
       <main className="mx-auto w-full max-w-6xl px-5 py-6">
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        <div className="mt-5">{children}</div>
+        {title && <h1 className="mb-5 text-2xl font-semibold">{title}</h1>}
+        {children}
       </main>
     </div>
   );

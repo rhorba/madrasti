@@ -152,3 +152,28 @@ test.describe("trilingual", () => {
     }
   });
 });
+
+test.describe("stale sessions", () => {
+  test("a cookie whose user no longer exists redirects to login, not an error page", async ({
+    page,
+    context,
+  }) => {
+    // A JWT outlives the row it points at — after a database reset, or once an
+    // account is deleted. Throwing inside a server component would turn that
+    // into a 500 with an opaque digest; the user should simply be sent back to
+    // sign in.
+    await signIn(page, ACCOUNTS.teacher, "teacher");
+
+    const cookies = await context.cookies();
+    const session = cookies.find((c) => c.name.endsWith("authjs.session-token"));
+    expect(session, "no session cookie found").toBeDefined();
+
+    // Corrupt the payload while keeping the cookie name and shape.
+    await context.clearCookies();
+    await context.addCookies([{ ...session!, value: `${session!.value}tampered` }]);
+
+    await page.goto("/fr/teacher");
+    await expect(page).toHaveURL(/\/fr\/login/);
+    await expect(page.getByRole("heading", { name: /connexion/i })).toBeVisible();
+  });
+});

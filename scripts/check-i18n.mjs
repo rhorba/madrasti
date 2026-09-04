@@ -37,6 +37,14 @@ const ALLOWED_IDENTICAL = new Set([
   "roles.admin",
   "roles.parent",
   "nav.classes",
+  "nav.sections",
+  "common.actions",
+  "admin.subjects.code",
+  "admin.classes.title",
+  "admin.classes.coefficient",
+  "admin.students.pagination",
+  "admin.teachers.classes",
+  "admin.import.massar",
 ]);
 
 function flatten(obj, prefix = "", out = new Map()) {

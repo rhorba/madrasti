@@ -10,7 +10,14 @@ import { eq } from "drizzle-orm";
 export async function changePasswordAction(formData: FormData): Promise<ActionResult> {
   // `allowPasswordChange` — this is the one route a user with
   // `mustChangePassword` may reach, so the guard must not bounce them here.
-  const session = await requireSession({ allowPasswordChange: true });
+  // Wrapped because `requireSession` throws: a stale cookie should produce a
+  // translated message, not an opaque server-action digest.
+  let session: Awaited<ReturnType<typeof requireSession>>;
+  try {
+    session = await requireSession({ allowPasswordChange: true });
+  } catch {
+    return { ok: false, error: "errors.notAuthorized" };
+  }
 
   const parsed = changePasswordSchema.safeParse({
     currentPassword: formData.get("currentPassword"),

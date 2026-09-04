@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/auth/session";
+import { requirePageSession } from "@/lib/auth/page-session";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ChangePasswordForm } from "./form";
 
@@ -9,7 +9,7 @@ export default async function ChangePasswordPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const session = await requireSession({ allowPasswordChange: true });
+  const session = await requirePageSession({ allowPasswordChange: true });
   const t = await getTranslations();
 
   return (

@@ -36,9 +36,7 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-]
-  .join("; ")
-  .concat(isDev ? "" : "; upgrade-insecure-requests");
+].join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
@@ -46,12 +44,36 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
 ];
 
 const config: NextConfig = {
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        /**
+         * HSTS only when the request actually arrived over https.
+         *
+         * Sent over plain http it poisons the browser's HSTS cache for
+         * `localhost` — after which Chrome force-upgrades every local request
+         * to https, nothing answers, and the developer meets an error page
+         * that survives restarts and cache clears. `includeSubDomains` makes
+         * it worse by covering every other local port too.
+         *
+         * Gating on NODE_ENV is not enough: `next start` runs a production
+         * build locally over http. Railway terminates TLS and forwards this
+         * header, so in real production the rule matches and HSTS is sent.
+         */
+        source: "/:path*",
+        has: [{ type: "header", key: "x-forwarded-proto", value: "https" }],
+        headers: [
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+        ],
+      },
+    ];
   },
 
   // `standalone` needs symlinks and fails on Windows without Developer Mode.
