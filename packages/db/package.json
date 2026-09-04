@@ -1,0 +1,36 @@
+{
+  "name": "@madrasti/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "generate": "tsx node_modules/drizzle-kit/bin.cjs generate",
+    "migrate": "tsx src/migrate.ts",
+    "push": "tsx node_modules/drizzle-kit/bin.cjs push",
+    "studio": "tsx node_modules/drizzle-kit/bin.cjs studio",
+    "seed": "tsx src/seed.ts",
+    "setup": "pnpm migrate && pnpm seed",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@madrasti/core": "workspace:*",
+    "argon2": "^0.41.1",
+    "drizzle-orm": "^0.38.3",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "drizzle-kit": "^0.30.1",
+    "dotenv": "^16.4.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
