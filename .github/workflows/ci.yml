@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A superseded run on the same branch is wasted compute.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://madrasti:madrasti_ci@localhost:5432/madrasti
+  AUTH_SECRET: ci-only-secret-not-used-anywhere-real-0000
+  AUTH_URL: http://localhost:3100
+  NEXT_PUBLIC_APP_URL: http://localhost:3100
+
+jobs:
+  # Cheap checks first, so an obvious mistake fails in under a minute rather
+  # than after a full browser install (`docs/devops-madrasti.md` §4).
+  static:
+    name: lint · typecheck · i18n
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # The mechanical half of DoD 14. The previous project on this stack
+      # shipped correct RTL layout with untranslated French behind it.
+      - run: pnpm i18n:check
+
+  test:
+    name: unit · integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: madrasti
+          POSTGRES_PASSWORD: madrasti_ci
+          POSTGRES_DB: madrasti
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U madrasti -d madrasti"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+      # Includes the authorisation suite, which gates every release: it proves
+      # a parent cannot reach another family's child.
+      - run: pnpm test
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: madrasti
+          POSTGRES_PASSWORD: madrasti_ci
+          POSTGRES_DB: madrasti
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U madrasti -d madrasti"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+  audit:
+    name: dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # This system holds records about minors; a known-vulnerable dependency
+      # is not something to carry to production quietly.
+      - run: pnpm audit --audit-level=high

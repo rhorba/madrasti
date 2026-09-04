@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — the implementation of DESIGN.md §4.
+ *
+ * Never hardcode a hex or a px in a component; reference a token.
+ * The aesthetic is "the school register, set properly": rules over cards,
+ * density over whitespace, ink on warm paper. See DESIGN.md §1 and §3 for the
+ * out-of-bounds list that this palette exists to serve.
+ */
+
+@theme {
+  /* --- primitives: green (brand) --- */
+  --color-green-50: #f0f6f1;
+  --color-green-100: #dcebdf;
+  --color-green-200: #b9d7c0;
+  --color-green-400: #4e9061;
+  --color-green-600: #2f6b43;
+  --color-green-700: #245334;
+  --color-green-900: #14301f;
+
+  /* --- primitives: sand (the paper ground and the ink) --- */
+  --color-sand-50: #faf9f6;
+  --color-sand-100: #f3f1ec;
+  --color-sand-200: #e7e4dc;
+  --color-sand-300: #d5d1c6;
+  --color-sand-500: #8c877a;
+  --color-sand-700: #4a463d;
+  --color-sand-900: #1f1d18;
+
+  /* --- primitives: semantic accents --- */
+  --color-amber-100: #fdf0d5;
+  --color-amber-500: #c9821a;
+  --color-amber-700: #8a5a0f;
+  --color-red-100: #fbe9e7;
+  --color-red-500: #b3392b;
+  --color-red-700: #7e2419;
+  --color-blue-100: #e8eff6;
+  --color-blue-500: #2f6690;
+  --color-blue-700: #1f4460;
+
+  /* --- typography --- */
+  --font-sans: var(--font-plex-sans), system-ui, -apple-system, sans-serif;
+  --font-arabic: var(--font-plex-arabic), var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5625rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.9375rem;
+  --text-3xl--line-height: 2.5rem;
+
+  /* --- radius: nothing softer than 6px (DESIGN.md §3) --- */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* --- elevation: three shadows total, all from directly above --- */
+  --shadow-dropdown: 0 2px 8px rgb(31 29 24 / 0.1);
+  --shadow-modal: 0 8px 24px rgb(31 29 24 / 0.14);
+  --shadow-sticky: 0 -2px 8px rgb(31 29 24 / 0.08);
+
+  /* --- motion: nothing above 200ms --- */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* --- semantic layer ----------------------------------------------------- */
+
+:root {
+  --bg-base: var(--color-sand-50);
+  --bg-sunken: var(--color-sand-100);
+  --surface-raised: #ffffff;
+
+  --border-default: var(--color-sand-200);
+  --border-strong: var(--color-sand-300);
+  --border-focus: var(--color-green-600);
+
+  --text-primary: var(--color-sand-900);
+  --text-secondary: var(--color-sand-700);
+  --text-muted: var(--color-sand-500);
+  --text-on-dark: var(--color-sand-50);
+
+  --action-primary: var(--color-green-600);
+  --action-primary-hover: var(--color-green-700);
+  --action-primary-text: #ffffff;
+}
+
+/* --- base --------------------------------------------------------------- */
+
+* {
+  border-color: var(--border-default);
+}
+
+html {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+/*
+ * Arabic set at the same px as Latin reads noticeably smaller. Compensating
+ * once here, as a token, keeps every component honest — doing it per component
+ * is how half the screens end up wrong.
+ */
+:lang(ar),
+[dir="rtl"] {
+  font-family: var(--font-arabic);
+  font-size: 1.0625em;
+  line-height: 1.7;
+}
+
+/*
+ * Marks, times and counts align down a column of thirty students. This single
+ * detail is most of what makes a grade table read like a register rather than
+ * a web page (DESIGN.md §4.3).
+ */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- print: bulletins and class lists are real deliverables on paper ----- */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  :root {
+    --bg-base: #ffffff;
+    --bg-sunken: #ffffff;
+    --text-primary: #000000;
+  }
+
+  html,
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  /* Navigation, buttons and anything interactive have no business on paper. */
+  [data-print="hide"],
+  nav,
+  button {
+    display: none !important;
+  }
+}
