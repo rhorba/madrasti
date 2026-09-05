@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
+import { formatInteger, formatRank } from "@/lib/format";
 import { APPRECIATION_MAX_LENGTH, BULLETIN_DECISIONS, type BulletinDecision } from "@madrasti/core";
 import { Printer } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { publishBulletins, saveBulletinReview, unpublishBulletins } from "./actions";
@@ -49,6 +50,7 @@ export function ReviewSheet({
   publishedAt: string | null;
 }) {
   const t = useTranslations("bulletins");
+  const locale = useLocale();
   const tp = useTranslations("bulletinDoc");
   const te = useTranslations();
   const router = useRouter();
@@ -146,7 +148,12 @@ export function ReviewSheet({
                   <span className="text-[var(--text-secondary)]">
                     {student.rank === null
                       ? "—"
-                      : t("rankOf", { rank: student.rank, of: student.classSize })}
+                      : t("rankOf", {
+                          // 1er, not 1e — the top of the class is the one place
+                          // a French reader notices the suffix.
+                          rank: formatRank(student.rank, locale),
+                          of: formatInteger(student.classSize, locale),
+                        })}
                   </span>
                   {student.absenceCount > 0 ? (
                     <Chip tone="amber">{t("absences", { count: student.absenceCount })}</Chip>

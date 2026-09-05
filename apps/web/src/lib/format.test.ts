@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatCoefficient, formatDocumentDate, formatInteger, formatMark } from "./format.js";
+import {
+  formatCoefficient,
+  formatDocumentDate,
+  formatInteger,
+  formatMark,
+  formatRank,
+} from "./format.js";
 
 /**
  * These tests exist for one reason above all others: to fail loudly if an ICU
@@ -81,5 +87,31 @@ describe("document dates", () => {
 describe("an unknown locale", () => {
   it("falls back to French, which is what the school's paperwork uses", () => {
     expect(formatMark(12.5, "de")).toBe("12,50");
+  });
+});
+
+describe("ranks", () => {
+  it("writes 1er for the top of the class, not 1e", () => {
+    // The one place a French reader notices an ordinal suffix, on the proudest
+    // line of a document their child brings home.
+    expect(formatRank(1, "fr")).toBe("1er");
+  });
+
+  it("writes 2e, 3e and 20e for everyone else", () => {
+    expect(formatRank(2, "fr")).toBe("2e");
+    expect(formatRank(3, "fr")).toBe("3e");
+    expect(formatRank(20, "fr")).toBe("20e");
+  });
+
+  it("adds no French suffix to Arabic or English", () => {
+    // Arabic reads "الرتبة 3 من 27" and English "3 of 27"; neither takes "e".
+    expect(formatRank(1, "ar")).toBe("1");
+    expect(formatRank(3, "ar")).toBe("3");
+    expect(formatRank(1, "en")).toBe("1");
+  });
+
+  it("keeps Moroccan digits in Arabic", () => {
+    expect(formatRank(12, "ar")).not.toMatch(EASTERN_DIGITS);
+    expect(formatRank(12, "ar")).toBe("12");
   });
 });

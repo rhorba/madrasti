@@ -1,4 +1,10 @@
-import { formatCoefficient, formatDocumentDate, formatInteger, formatMark } from "@/lib/format";
+import {
+  formatCoefficient,
+  formatDocumentDate,
+  formatInteger,
+  formatMark,
+  formatRank,
+} from "@/lib/format";
 import { localized, localizedName, personName, scriptLang } from "@/lib/localized";
 import type { StoredBulletin } from "@/lib/queries/bulletins";
 import { bulletinTotals } from "@madrasti/grading";
@@ -166,7 +172,7 @@ export async function BulletinDocument({
               bulletin.rank === null || bulletin.classSize === null
                 ? "—"
                 : t("rankValue", {
-                    rank: formatInteger(bulletin.rank, locale),
+                    rank: formatRank(bulletin.rank, locale),
                     of: formatInteger(bulletin.classSize, locale),
                   })
             }

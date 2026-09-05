@@ -77,3 +77,26 @@ export function formatDocumentDate(date: Date, locale: Locale | string): string 
     timeZone: "Africa/Casablanca",
   }).format(date);
 }
+
+/**
+ * A rank, with the ordinal suffix the language actually uses.
+ *
+ * French writes **1er** for the top of the class and 2e, 3e, 20e for everyone
+ * else. Printing "1e" on the proudest line of a bulletin is the kind of mistake
+ * a parent notices immediately and a developer never does.
+ *
+ * Done here rather than with ICU `selectordinal` in the message catalogue,
+ * because `selectordinal` needs a raw number and would format it with the
+ * locale's own numbering system — which for `ar` is exactly the Eastern-digit
+ * behaviour this module exists to pin down. The suffix is chosen here; the
+ * digits still go through `formatInteger`.
+ *
+ * Arabic and English take no suffix in this position: Arabic writes
+ * "الرتبة 3 من 27", and the English string reads "3 of 27".
+ */
+export function formatRank(value: number, locale: Locale | string): string {
+  const digits = formatInteger(value, locale);
+  if (locale !== "fr") return digits;
+  // 1er, and 1re for a feminine noun — but "rang" is masculine, so 1er.
+  return value === 1 ? `${digits}er` : `${digits}e`;
+}

@@ -2,7 +2,7 @@ import { BulletinDocument } from "@/components/bulletin-document";
 import { EmptyState } from "@/components/empty-state";
 import { PrintButton } from "@/components/print-button";
 import { Link } from "@/i18n/navigation";
-import { formatInteger, formatMark } from "@/lib/format";
+import { formatInteger, formatMark, formatRank } from "@/lib/format";
 import { localizedLabel } from "@/lib/localized";
 import { getCurrentYear, getSchool } from "@/lib/queries/academic";
 import {
@@ -113,7 +113,7 @@ export async function FamilyBulletin({
             bulletin.rank === null || bulletin.classSize === null
               ? "—"
               : t("rankValue", {
-                  rank: formatInteger(bulletin.rank, locale),
+                  rank: formatRank(bulletin.rank, locale),
                   of: formatInteger(bulletin.classSize, locale),
                 })
           }
