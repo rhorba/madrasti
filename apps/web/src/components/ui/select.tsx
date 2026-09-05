@@ -30,8 +30,10 @@ export function SelectField({
   const errorId = `${fieldId}-error`;
   const hintId = `${fieldId}-hint`;
 
+  // See the note in field.tsx: without min-w-0 a select in a grid refuses to
+  // shrink below its intrinsic content width.
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={fieldId} className="text-sm font-medium text-[var(--text-secondary)]">
         {label}
       </label>
@@ -40,7 +42,7 @@ export function SelectField({
         aria-invalid={error ? true : undefined}
         aria-describedby={cn(error && errorId, hint && hintId) || undefined}
         className={cn(
-          "h-11 rounded-md border bg-[var(--surface-raised)] px-3 text-base",
+          "h-11 w-full min-w-0 rounded-md border bg-[var(--surface-raised)] px-3 text-base",
           "border-[var(--border-strong)] text-[var(--text-primary)]",
           error && "border-red-700",
           className

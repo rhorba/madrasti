@@ -14,6 +14,7 @@
   "dependencies": {
     "@madrasti/core": "workspace:*",
     "@madrasti/db": "workspace:*",
+    "@madrasti/timetable": "workspace:*",
     "argon2": "^0.41.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

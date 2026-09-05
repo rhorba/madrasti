@@ -134,6 +134,11 @@ function toErrorKey(error: unknown): string {
 
   const message = error instanceof Error ? error.message : "";
 
+  // Domain code throws errors whose message *is* the translation key —
+  // `validateSlot` and the conflict checks do this. Pass those straight
+  // through rather than flattening them to a generic failure.
+  if (message.startsWith("errors.")) return message;
+
   // Constraint names are stable and map to something a user can act on.
   if (message.includes("users_email_unique")) return "errors.emailTaken";
   if (message.includes("students_massar_unique")) return "errors.massarTaken";

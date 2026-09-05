@@ -108,7 +108,7 @@
     "accountDisabled": "Ce compte a été désactivé. Contactez l'administration.",
     "tooManyAttempts": "Trop de tentatives. Réessayez dans {minutes} minutes.",
     "notAuthorized": "Vous n'avez pas accès à cette page.",
-    "notFound": "Page introuvable.",
+    "notFound": "Élément introuvable.",
     "unexpected": "Une erreur est survenue. Réessayez.",
     "emailTaken": "Cette adresse e-mail est déjà utilisée.",
     "massarTaken": "Ce code Massar est déjà attribué à un autre élève.",
@@ -125,7 +125,14 @@
     "csvTooLarge": "Le fichier est trop volumineux.",
     "csvMissingHeaders": "Le fichier ne contient pas toutes les colonnes obligatoires.",
     "csvNoValidRows": "Aucune ligne valide à importer.",
-    "duplicateMassarInFile": "Ce code Massar apparaît deux fois dans le fichier."
+    "duplicateMassarInFile": "Ce code Massar apparaît deux fois dans le fichier.",
+    "teacherBusy": "Cet enseignant a déjà cours à ce moment-là.",
+    "classBusy": "Cette classe a déjà cours à ce moment-là.",
+    "slotTooShort": "La séance est trop courte (15 minutes au minimum).",
+    "slotTooLong": "La séance est trop longue (6 heures au maximum).",
+    "sameDay": "Choisissez deux jours différents.",
+    "nothingToCopy": "Aucune séance à dupliquer ce jour-là.",
+    "allSlotsConflict": "Toutes les séances entrent en conflit ce jour-là."
   },
   "admin": {
     "home": {
@@ -395,5 +402,44 @@
       "skipped": "{count} ligne(s) ignorée(s) pour cause d'erreur.",
       "importAnother": "Importer un autre fichier"
     }
+  },
+  "timetable": {
+    "title": "Emploi du temps",
+    "description": "Grille hebdomadaire des classes pour {year}.",
+    "myTimetable": "Mon emploi du temps",
+    "needYear": "Créez d'abord une année scolaire.",
+    "needClasses": "Créez d'abord des classes.",
+    "needSubjects": "Aucune matière rattachée à {class}. Ajoutez-en avant de bâtir l'emploi du temps.",
+    "manageSubjects": "Gérer les matières de la classe",
+    "chooseClass": "Choisir une classe",
+    "chooseChild": "Choisir un enfant",
+    "noChildren": "Aucun enfant rattaché à votre compte.",
+    "noLessons": "—",
+    "noneYet": "Aucune séance pour le moment.",
+    "weekdays": {
+      "1": "Lundi",
+      "2": "Mardi",
+      "3": "Mercredi",
+      "4": "Jeudi",
+      "5": "Vendredi",
+      "6": "Samedi"
+    },
+    "addSlot": "Ajouter une séance",
+    "removeSlot": "Supprimer la séance",
+    "subject": "Matière et enseignant",
+    "weekday": "Jour",
+    "period": "Créneau habituel",
+    "periodHint": "Pré-remplit les heures ci-dessous",
+    "startTime": "Début",
+    "endTime": "Fin",
+    "room": "Salle",
+    "roomOptional": "Facultatif",
+    "copyDay": "Dupliquer une journée",
+    "copyDayHint": "Recopie les séances d'un jour vers un autre. Les créneaux qui entrent en conflit sont ignorés.",
+    "copyFrom": "Depuis",
+    "copyTo": "Vers",
+    "copy": "Dupliquer",
+    "copied": "{copied} séance(s) dupliquée(s).",
+    "copiedWithSkips": "{copied} séance(s) dupliquée(s), {skipped} ignorée(s) pour cause de conflit."
   }
 }

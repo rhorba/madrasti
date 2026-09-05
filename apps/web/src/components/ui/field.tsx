@@ -21,8 +21,12 @@ export function Field({ label, error, hint, className, id, ...props }: FieldProp
   const errorId = `${fieldId}-error`;
   const hintId = `${fieldId}-hint`;
 
+  // `min-w-0` on the wrapper and `w-full` on the control: a grid or flex item
+  // defaults to `min-width: auto`, and an <input> carries an intrinsic
+  // ~20-character width, so without these the field refuses to shrink and
+  // pushes the page sideways on a phone.
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={fieldId} className="text-sm font-medium text-[var(--text-secondary)]">
         {label}
       </label>
@@ -31,7 +35,7 @@ export function Field({ label, error, hint, className, id, ...props }: FieldProp
         aria-invalid={error ? true : undefined}
         aria-describedby={cn(error && errorId, hint && hintId) || undefined}
         className={cn(
-          "h-11 rounded-md border bg-[var(--surface-raised)] px-3 text-base",
+          "h-11 w-full min-w-0 rounded-md border bg-[var(--surface-raised)] px-3 text-base",
           "border-[var(--border-strong)] text-[var(--text-primary)]",
           "placeholder:text-[var(--text-muted)]",
           error && "border-red-700",

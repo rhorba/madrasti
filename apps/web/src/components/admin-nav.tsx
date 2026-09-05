@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import {
   BookOpen,
+  CalendarClock,
   CalendarDays,
   GraduationCap,
   Layers,
@@ -23,6 +24,7 @@ const SECTIONS = [
   { href: "/admin/levels", key: "levels", Icon: Layers },
   { href: "/admin/subjects", key: "subjects", Icon: BookOpen },
   { href: "/admin/classes", key: "classes", Icon: LayoutGrid },
+  { href: "/admin/timetable", key: "timetable", Icon: CalendarClock },
   { href: "/admin/students", key: "students", Icon: GraduationCap },
   { href: "/admin/guardians", key: "guardians", Icon: Users },
   { href: "/admin/teachers", key: "teachers", Icon: UserCog },

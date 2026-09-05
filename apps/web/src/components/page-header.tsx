@@ -7,8 +7,8 @@ export function PageHeader({
   action,
 }: {
   title: string;
-  description?: string;
-  action?: ReactNode;
+  description?: string | undefined;
+  action?: ReactNode | undefined;
 }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">

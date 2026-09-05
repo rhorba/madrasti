@@ -108,7 +108,7 @@
     "accountDisabled": "This account has been disabled. Contact the office.",
     "tooManyAttempts": "Too many attempts. Try again in {minutes} minutes.",
     "notAuthorized": "You do not have access to this page.",
-    "notFound": "Page not found.",
+    "notFound": "Item not found.",
     "unexpected": "Something went wrong. Please try again.",
     "emailTaken": "That email address is already in use.",
     "massarTaken": "That Massar code belongs to another student.",
@@ -125,7 +125,14 @@
     "csvTooLarge": "The file is too large.",
     "csvMissingHeaders": "The file is missing required columns.",
     "csvNoValidRows": "No valid rows to import.",
-    "duplicateMassarInFile": "That Massar code appears twice in the file."
+    "duplicateMassarInFile": "That Massar code appears twice in the file.",
+    "teacherBusy": "That teacher already has a lesson at that time.",
+    "classBusy": "That class already has a lesson at that time.",
+    "slotTooShort": "The lesson is too short (15 minutes minimum).",
+    "slotTooLong": "The lesson is too long (6 hours maximum).",
+    "sameDay": "Choose two different days.",
+    "nothingToCopy": "No lessons to duplicate on that day.",
+    "allSlotsConflict": "Every lesson clashes on that day."
   },
   "admin": {
     "home": {
@@ -395,5 +402,44 @@
       "skipped": "{count} row(s) skipped because of errors.",
       "importAnother": "Import another file"
     }
+  },
+  "timetable": {
+    "title": "Timetable",
+    "description": "Weekly class grid for {year}.",
+    "myTimetable": "My timetable",
+    "needYear": "Create an academic year first.",
+    "needClasses": "Create some classes first.",
+    "needSubjects": "No subjects attached to {class}. Add some before building the timetable.",
+    "manageSubjects": "Manage the class's subjects",
+    "chooseClass": "Choose a class",
+    "chooseChild": "Choose a child",
+    "noChildren": "No children linked to your account.",
+    "noLessons": "—",
+    "noneYet": "No lessons yet.",
+    "weekdays": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    },
+    "addSlot": "Add a lesson",
+    "removeSlot": "Remove the lesson",
+    "subject": "Subject and teacher",
+    "weekday": "Day",
+    "period": "Usual period",
+    "periodHint": "Pre-fills the times below",
+    "startTime": "Start",
+    "endTime": "End",
+    "room": "Room",
+    "roomOptional": "Optional",
+    "copyDay": "Duplicate a day",
+    "copyDayHint": "Copies one day's lessons onto another. Anything that would clash is skipped.",
+    "copyFrom": "From",
+    "copyTo": "To",
+    "copy": "Duplicate",
+    "copied": "{copied} lesson(s) duplicated.",
+    "copiedWithSkips": "{copied} lesson(s) duplicated, {skipped} skipped because of a clash."
   }
 }

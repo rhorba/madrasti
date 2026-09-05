@@ -29,7 +29,7 @@ export function LocaleSwitcher() {
   }
 
   return (
-    <div className="flex items-center gap-1" data-print="hide">
+    <div className="flex flex-wrap items-center gap-x-1" data-print="hide">
       <Languages aria-hidden className="size-4 text-[var(--text-muted)]" />
       <span className="sr-only">{t("switch")}</span>
       {LOCALES.map((locale: Locale) => (
