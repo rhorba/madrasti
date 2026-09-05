@@ -64,13 +64,12 @@ function parse(url) {
  */
 function assertSafeTarget(url) {
   const { host, database } = parse(url);
-  const looksLive =
-    !/^(localhost|127\.0\.0\.1|::1)$/.test(host) || /prod/i.test(database);
+  const looksLive = !/^(localhost|127\.0\.0\.1|::1)$/.test(host) || /prod/i.test(database);
   if (looksLive && !has("force")) {
     console.error(
-      `Refusing to restore into ${host}/${database}: it does not look like a scratch database.\n` +
-        "A restore DROPS AND REPLACES every row in the target. If that is genuinely\n" +
-        "what you want, re-run with --force."
+      `Refusing to restore into ${host}/${database}: it does not look like a scratch database.
+A restore DROPS AND REPLACES every row in the target. If that is genuinely
+what you want, re-run with --force.`
     );
     process.exit(2);
   }
@@ -98,9 +97,10 @@ if (command === "dump") {
   if (bytes < 1024) throw new Error(`dump is only ${bytes} bytes — that is not a school`);
   console.log(`dumped ${database} -> ${out} (${(bytes / 1024 / 1024).toFixed(1)} MB)`);
   console.log(
-    "\nThis file contains children's records. Encrypt it before it leaves this machine:\n" +
-      `  gpg --symmetric --cipher-algo AES256 ${out}\n` +
-      "and keep it somewhere that is not Railway (docs/security-madrasti.md §10)."
+    `
+This file contains children's records. Encrypt it before it leaves this machine:
+  gpg --symmetric --cipher-algo AES256 ${out}
+and keep it somewhere that is not Railway (docs/security-madrasti.md §10).`
   );
   process.exit(0);
 }
@@ -117,7 +117,20 @@ if (command === "restore" || command === "verify") {
 
   run(
     "pg_restore",
-    ["-h", host, "-p", port, "-U", user, "-d", database, "--clean", "--if-exists", "--no-owner", from],
+    [
+      "-h",
+      host,
+      "-p",
+      port,
+      "-U",
+      user,
+      "-d",
+      database,
+      "--clean",
+      "--if-exists",
+      "--no-owner",
+      from,
+    ],
     pg
   );
   console.log(`restored ${from} -> ${host}/${database}`);
@@ -148,9 +161,9 @@ if (command === "restore" || command === "verify") {
 }
 
 console.error(
-  "usage:\n" +
-    "  node scripts/backup.mjs dump [--out FILE]\n" +
-    "  node scripts/backup.mjs restore --from FILE --to URL [--force]\n" +
-    "  node scripts/backup.mjs verify  --from FILE --to URL [--force]"
+  `usage:
+  node scripts/backup.mjs dump [--out FILE]
+  node scripts/backup.mjs restore --from FILE --to URL [--force]
+  node scripts/backup.mjs verify  --from FILE --to URL [--force]`
 );
 process.exit(1);

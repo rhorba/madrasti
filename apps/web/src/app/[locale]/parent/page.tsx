@@ -227,15 +227,23 @@ function LastMarkCell({
     <>
       {/* An absence is never rendered as a zero — it is not a mark the child
           earned, and a parent reading "0" would draw the wrong conclusion. */}
+      {/* `dir="ltr"` on the fraction, not the row. "6 / 10" is two
+          left-to-right numbers around a neutral slash: in an Arabic paragraph
+          the slash takes the paragraph's direction and a parent reads
+          "10 / 6" — their child's mark, inverted. The same defect was fixed on
+          the printed bulletin (`.logs/issues.md`, story 8.4) and this is the
+          other place it occurs. */}
       <span className="tabular font-medium">
         {mark.isAbsent || mark.score === null ? (
           absentLabel
         ) : (
-          <>
+          // Only the fraction is forced left-to-right; the absent label above
+          // is Arabic prose and must keep the paragraph's direction.
+          <span dir="ltr">
             {/* `Number` strips the numeric column's trailing zeros: a mark is
                 shown as 14 or 14,5 — never as 14.00. */}
             {Number(mark.score)} / {Number(mark.maxScore)}
-          </>
+          </span>
         )}
       </span>
       <span className="block text-xs text-[var(--text-muted)]">

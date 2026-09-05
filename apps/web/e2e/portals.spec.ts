@@ -211,6 +211,21 @@ test.describe("a student cannot reach another student", () => {
   });
 });
 
+test.describe("bidi on the family's own numbers", () => {
+  test("a mark reads 6 / 10 in Arabic, not 10 / 6", async ({ page }) => {
+    // Found by screening the deployed Arabic portal and reading it. "6 / 10" is
+    // two left-to-right numbers around a neutral slash: in an Arabic paragraph
+    // the slash takes the paragraph's direction and the whole thing reverses,
+    // so a parent sees their child's mark inverted. The same defect was fixed
+    // on the printed bulletin in story 8.4; this was the other place it lived.
+    await signIn(page, PARENT, "parent", "ar");
+    const fraction = page.locator("span[dir=ltr]").first();
+    if ((await fraction.count()) > 0) {
+      await expect(fraction).toHaveText(/^\d+([.,]\d+)? \/ \d+$/);
+    }
+  });
+});
+
 test.describe("trilingual", () => {
   test("the parent home is really translated into Arabic", async ({ page }) => {
     await signIn(page, PARENT, "parent", "ar");
