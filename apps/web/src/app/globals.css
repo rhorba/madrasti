@@ -394,7 +394,35 @@ body {
   }
 
   .bulletin-sheet section p[dir="auto"] {
-    min-height: 7mm;
+    min-height: 6mm;
+  }
+
+  /*
+   * The sheet's internal rhythm, compressed for paper.
+   *
+   * Sitting just inside the page was not enough: the tallest sheet measured
+   * 913px against roughly 939px usable and eight of twenty-three still broke,
+   * because the margin was thinner than the difference between measuring in a
+   * viewport and laying out for `@page`. This buys real headroom rather than
+   * another few pixels, and it is print-only — the screen keeps the spacing it
+   * was designed with.
+   */
+  .bulletin-sheet > * {
+    margin-block-start: 2mm !important;
+  }
+
+  .bulletin-sheet > header {
+    margin-block-start: 0 !important;
+    padding-bottom: 2mm;
+  }
+
+  .bulletin-sheet > footer {
+    margin-block-start: 4mm !important;
+  }
+
+  /* The signature rule needs space above it to be signed in, not 14mm of it. */
+  .bulletin-sheet footer div[class*="mt-"] {
+    margin-top: 9mm;
   }
 
   /*
