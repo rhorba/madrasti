@@ -232,8 +232,8 @@ body {
    * `break-inside: avoid` cannot save a sheet that genuinely does not fit.
    * Checked by counting pages in the rendered PDF, not by looking at a screen.
    */
-  font-size: 9.8pt;
-  line-height: 1.36;
+  font-size: 9.7pt;
+  line-height: 1.28;
 }
 
 .bulletin-table {
@@ -368,6 +368,13 @@ body {
 
   .bulletin-sheet:last-child {
     break-after: auto;
+  }
+
+  /* The signature block's gap is set for the screen. On paper it is the
+     cheapest vertical space to reclaim, and reclaiming it is what keeps the
+     Arabic sheet — the tallest of the three — on one side of one page. */
+  .bulletin-sheet > footer {
+    margin-block-start: 0.75rem;
   }
 
   /*
