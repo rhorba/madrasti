@@ -46,7 +46,8 @@
     "year": "السنة الدراسية",
     "levels": "المستويات",
     "guardians": "أولياء الأمور",
-    "teachers": "الأساتذة"
+    "teachers": "الأساتذة",
+    "absences": "الغيابات"
   },
   "auth": {
     "signInTitle": "تسجيل الدخول",
@@ -441,5 +442,46 @@
     "copy": "نسخ",
     "copied": "تم نسخ {copied} حصة.",
     "copiedWithSkips": "تم نسخ {copied} حصة، وتُجوهلت {skipped} بسبب التعارض."
+  },
+  "teacherHome": {
+    "title": "حصص اليوم",
+    "remaining": "بقي {count} تسجيل حضور.",
+    "allTaken": "تم تسجيل الحضور في كل الحصص.",
+    "taken": "تم التسجيل",
+    "seeWeek": "عرض الأسبوع",
+    "nothingToday": "لا توجد حصص اليوم.",
+    "sunday": "لا دراسة يوم الأحد."
+  },
+  "attendance": {
+    "take": "تسجيل الحضور",
+    "correct": "تصحيح",
+    "save": "حفظ",
+    "retry": "إعادة المحاولة",
+    "saved": "تم حفظ الحضور.",
+    "marksKept": "تم الاحتفاظ بما أدخلته.",
+    "alreadyTaken": "تم تسجيل الحضور لهذه الحصة من قبل. يمكنك تصحيحه.",
+    "sessionOn": "{date} · {from}–{to}",
+    "backToDay": "العودة إلى يومي",
+    "noStudents": "لا يوجد تلاميذ في هذا القسم.",
+    "minutesLate": "دقائق التأخر",
+    "cycleLabel": "{name} — الحالة الآن {status}. اضغط للتغيير.",
+    "statuses": {
+      "present": "حاضر",
+      "absent": "غائب",
+      "late": "متأخر",
+      "excused": "بعذر"
+    }
+  },
+  "absences": {
+    "title": "الغيابات",
+    "forTerm": "{class} — الدورة الجارية.",
+    "chooseClass": "اختر قسمًا",
+    "nothing": "لا يوجد قسم أو دورة جارية.",
+    "noStudents": "لا يوجد تلاميذ في هذا القسم.",
+    "student": "التلميذ",
+    "absent": "الغيابات",
+    "late": "التأخرات",
+    "excused": "بعذر",
+    "marked": "الحصص"
   }
 }

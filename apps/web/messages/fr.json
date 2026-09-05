@@ -46,7 +46,8 @@
     "year": "Année scolaire",
     "levels": "Niveaux",
     "guardians": "Parents",
-    "teachers": "Enseignants"
+    "teachers": "Enseignants",
+    "absences": "Absences"
   },
   "auth": {
     "signInTitle": "Connexion",
@@ -441,5 +442,46 @@
     "copy": "Dupliquer",
     "copied": "{copied} séance(s) dupliquée(s).",
     "copiedWithSkips": "{copied} séance(s) dupliquée(s), {skipped} ignorée(s) pour cause de conflit."
+  },
+  "teacherHome": {
+    "title": "Mes cours d'aujourd'hui",
+    "remaining": "{count} appel(s) restant(s).",
+    "allTaken": "Tous les appels sont faits.",
+    "taken": "Appel fait",
+    "seeWeek": "Voir la semaine",
+    "nothingToday": "Aucun cours aujourd'hui.",
+    "sunday": "Pas de cours le dimanche."
+  },
+  "attendance": {
+    "take": "Faire l'appel",
+    "correct": "Corriger",
+    "save": "Enregistrer",
+    "retry": "Réessayer",
+    "saved": "Appel enregistré.",
+    "marksKept": "Vos saisies sont conservées.",
+    "alreadyTaken": "L'appel a déjà été fait pour cette séance. Vous pouvez le corriger.",
+    "sessionOn": "{date} · {from}–{to}",
+    "backToDay": "Retour à ma journée",
+    "noStudents": "Aucun élève inscrit dans cette classe.",
+    "minutesLate": "Minutes de retard",
+    "cycleLabel": "{name} — actuellement {status}. Appuyez pour changer.",
+    "statuses": {
+      "present": "Présent",
+      "absent": "Absent",
+      "late": "Retard",
+      "excused": "Excusé"
+    }
+  },
+  "absences": {
+    "title": "Absences",
+    "forTerm": "{class} — trimestre en cours.",
+    "chooseClass": "Choisir une classe",
+    "nothing": "Aucune classe ou aucun trimestre en cours.",
+    "noStudents": "Aucun élève inscrit dans cette classe.",
+    "student": "Élève",
+    "absent": "Absences",
+    "late": "Retards",
+    "excused": "Excusés",
+    "marked": "Séances"
   }
 }

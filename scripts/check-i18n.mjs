@@ -45,6 +45,10 @@ const ALLOWED_IDENTICAL = new Set([
   "admin.students.pagination",
   "admin.teachers.classes",
   "admin.import.massar",
+  "nav.absences",
+  "absences.title",
+  "absences.absent",
+  "attendance.statuses.absent",
 ]);
 
 function flatten(obj, prefix = "", out = new Map()) {
@@ -105,10 +109,12 @@ for (const locale of locales) {
       if (!expected.has(p)) problems.push(`${locale}: unexpected placeholder {${p}} in ${key}`);
     }
 
-    // A value with no letters is punctuation or a number — an em-dash
-    // placeholder, say — and is legitimately identical everywhere. Checking it
-    // would only grow the allowlist without catching anything.
-    const hasLetters = /\p{L}/u.test(value);
+    // A value with no letters of its own is punctuation, a number, or pure
+    // ICU placeholders ("{date} · {from}–{to}") — legitimately identical
+    // everywhere. Placeholder *names* are stripped first, since they are
+    // identifiers rather than prose.
+    const withoutPlaceholders = value.replace(/\{[^}]*\}/g, "");
+    const hasLetters = /\p{L}/u.test(withoutPlaceholders);
 
     if (hasLetters && !ALLOWED_IDENTICAL.has(key) && value === reference.get(key)) {
       problems.push(`${locale}: identical to ${REFERENCE} — probably untranslated: ${key}`);

@@ -46,7 +46,8 @@
     "year": "Academic year",
     "levels": "Levels",
     "guardians": "Guardians",
-    "teachers": "Teachers"
+    "teachers": "Teachers",
+    "absences": "Absences"
   },
   "auth": {
     "signInTitle": "Sign in",
@@ -441,5 +442,46 @@
     "copy": "Duplicate",
     "copied": "{copied} lesson(s) duplicated.",
     "copiedWithSkips": "{copied} lesson(s) duplicated, {skipped} skipped because of a clash."
+  },
+  "teacherHome": {
+    "title": "Today's lessons",
+    "remaining": "{count} register(s) still to take.",
+    "allTaken": "Every register is taken.",
+    "taken": "Taken",
+    "seeWeek": "See the week",
+    "nothingToday": "No lessons today.",
+    "sunday": "No lessons on Sunday."
+  },
+  "attendance": {
+    "take": "Take the register",
+    "correct": "Correct",
+    "save": "Save",
+    "retry": "Try again",
+    "saved": "Register saved.",
+    "marksKept": "Your marks have been kept.",
+    "alreadyTaken": "This register has already been taken. You can correct it.",
+    "sessionOn": "{date} · {from}–{to}",
+    "backToDay": "Back to my day",
+    "noStudents": "No students in this class.",
+    "minutesLate": "Minutes late",
+    "cycleLabel": "{name} — currently {status}. Tap to change.",
+    "statuses": {
+      "present": "Present",
+      "absent": "Absent",
+      "late": "Late",
+      "excused": "Excused"
+    }
+  },
+  "absences": {
+    "title": "Absences",
+    "forTerm": "{class} — current term.",
+    "chooseClass": "Choose a class",
+    "nothing": "No class or no current term.",
+    "noStudents": "No students in this class.",
+    "student": "Student",
+    "absent": "Absences",
+    "late": "Late",
+    "excused": "Excused",
+    "marked": "Lessons"
   }
 }
