@@ -29,7 +29,40 @@ function create() {
 
   if (process.env["NODE_ENV"] !== "production") globalForDb.__madrastiSql = client;
 
-  return drizzle(client, { schema });
+  return drizzle(client, { schema, logger: { logQuery: () => countQuery() } });
+}
+
+/**
+ * How many statements the handle has issued.
+ *
+ * Off unless a test turns it on, and it counts rather than logs: §12.9 forbids
+ * an N+1 on any list screen, and "no N+1" is a claim about the **number of
+ * round trips**, which is not observable from a function's return value. A
+ * screen that ran one query per pupil would look identical to one that ran
+ * two in total — until a class of thirty made the register take a second to
+ * open.
+ *
+ * Deliberately not a query log: a statement carries parameters, and those
+ * parameters are children's names (`CLAUDE.md` §11).
+ */
+const counter = { on: false, count: 0 };
+
+function countQuery(): void {
+  if (counter.on) counter.count += 1;
+}
+
+/** Run `fn`, and report how many statements it issued. */
+export async function countQueries<T>(
+  fn: () => Promise<T>
+): Promise<{ result: T; queries: number }> {
+  counter.on = true;
+  counter.count = 0;
+  try {
+    const result = await fn();
+    return { result, queries: counter.count };
+  } finally {
+    counter.on = false;
+  }
 }
 
 let instance: Db | undefined;

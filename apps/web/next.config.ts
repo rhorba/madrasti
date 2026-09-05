@@ -47,6 +47,10 @@ const securityHeaders = [
 ];
 
 const config: NextConfig = {
+  // The deployed origin was announcing `x-powered-by: Next.js`. It changes no
+  // outcome on its own, but it hands a scanner the framework and therefore the
+  // CVE list to try, for nothing in return (`docs/security-madrasti.md` §10).
+  poweredByHeader: false,
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
