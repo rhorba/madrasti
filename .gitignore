@@ -19,3 +19,8 @@ Thumbs.db
 
 # Project monitoring logs
 .logs/
+
+# A credentials sheet, even one holding only demo passwords, should not be
+# a permanent object in git history. The four canonical accounts are already
+# documented deliberately in docs/handover-madrasti.md.
+.recordings/demo-accounts.txt
