@@ -201,10 +201,19 @@ body {
   margin-inline: auto;
   color: #000000;
   background: #ffffff;
-  /* Set slightly tighter than the app: a bulletin is a dense ruled document,
-     and ten subjects plus signatures have to fit on one side of one sheet. */
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  /*
+   * Sized in **points, not rem**. `rem` resolves against the root, and the
+   * global RTL rule sets `font-size: 1.0625em` on `<html>` to compensate for
+   * Arabic reading small — so a `rem` here is 6.25% larger in Arabic than in
+   * French, and every attempt to tune the Arabic sheet compounded instead of
+   * applying. Points are absolute, which is what a printed document wants
+   * anyway.
+   *
+   * A bulletin is a dense ruled document: ten subjects, the summary and two
+   * signature blocks have to fit on one side of one sheet.
+   */
+  font-size: 9.5pt;
+  line-height: 1.42;
 }
 
 /* Arabic at the same px as Latin reads too small (see the base rule above),
@@ -223,8 +232,8 @@ body {
    * `break-inside: avoid` cannot save a sheet that genuinely does not fit.
    * Checked by counting pages in the rendered PDF, not by looking at a screen.
    */
-  font-size: 0.84rem;
-  line-height: 1.4;
+  font-size: 9.8pt;
+  line-height: 1.36;
 }
 
 .bulletin-table {
