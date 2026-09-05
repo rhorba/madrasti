@@ -25,13 +25,13 @@ export default defineConfig({
       include: ["src/lib/**/*.ts", "src/**/actions.ts", "src/**/*-actions.ts"],
       exclude: ["src/**/*.test.ts"],
       // **A ratchet, not the target.** The DoD asks for 80% (`CLAUDE.md`
-      // §12.4) and this layer is at ~28%: eight of the ten server-action files
-      // have no unit test, and the admin and timetable queries none either.
-      // See `.logs/issues.md`. The floor is set just under the measured figure
-      // so it cannot slip further while that is worked off, and it is raised
-      // as tests land — the honest number is deliberately visible in this file
-      // rather than hidden behind a narrowed `include`.
-      thresholds: { lines: 27, functions: 63, branches: 78, statements: 27 },
+      // §12.4) and this layer is at ~33%: eight of the eleven server-action
+      // files have no unit test, and the admin and timetable queries none
+      // either. See `.logs/issues.md`. The floor is set just under the
+      // measured figure so it cannot slip further while that is worked off,
+      // and it is raised as tests land — the honest number is deliberately
+      // visible in this file rather than hidden behind a narrowed `include`.
+      thresholds: { lines: 33, functions: 69, branches: 81, statements: 33 },
     },
   },
 });

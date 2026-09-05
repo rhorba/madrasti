@@ -7,6 +7,9 @@ import { loadRootEnv, requireDatabaseUrl } from "./env.js";
 import * as s from "./schema/index.js";
 import {
   AFTERNOON_SLOTS,
+  APPRECIATIONS_AR,
+  APPRECIATIONS_FR,
+  ARABIC_MEDIUM_SUBJECTS,
   ASSESSMENT_TITLES,
   COEFFICIENTS,
   FEMALE_FIRST_NAMES,
@@ -141,7 +144,8 @@ async function main(): Promise<void> {
   // database that already holds a previous seed.
   await db.execute(
     `truncate table
-       audit_log, bulletin_lines, bulletins, grades, assessments, assignments,
+       audit_log, bulletin_lines, bulletins, subject_appreciations, grades,
+       assessments, assignments,
        attendance, sessions, timetable_slots, enrolments, class_subjects,
        class_groups, subjects, levels, terms, academic_years, school,
        student_guardians, students, guardians, teachers, users
@@ -737,6 +741,34 @@ async function main(): Promise<void> {
   }
   await insertOnly(s.assignments, assignmentValues, 1000);
 
+  // --- subject appreciations (term 1) ------------------------------------
+  // Written by the subject's own teacher, in the language they teach in, so
+  // the seeded bulletin is mixed-script from the start (see seed-data.ts).
+  const teacherUserByTeacherId = new Map(
+    teacherRows.map((row, i) => [row.id, teacherUsers[i]?.id ?? adminUser.id])
+  );
+
+  const appreciationValues: (typeof s.subjectAppreciations.$inferInsert)[] = [];
+  for (const cs of classSubjects) {
+    const arabicMedium = ARABIC_MEDIUM_SUBJECTS.includes(cs.code);
+    const phrases = arabicMedium ? APPRECIATIONS_AR : APPRECIATIONS_FR;
+    const roster = studentsByClass.get(cs.classIdx) ?? [];
+    for (const studentId of roster) {
+      // ~70% written. The rest are blank on purpose: a bulletin where every
+      // subject has a remark never shows what an empty one looks like, and
+      // that is the row the print stylesheet gets wrong.
+      if (rng() > 0.7) continue;
+      appreciationValues.push({
+        classSubjectId: cs.id,
+        studentId,
+        termId: term1.id,
+        text: pick(phrases),
+        recordedBy: teacherUserByTeacherId.get(cs.teacherId) ?? adminUser.id,
+      });
+    }
+  }
+  await insertOnly(s.subjectAppreciations, appreciationValues, 2000);
+
   // --- summary -----------------------------------------------------------
   const sampleParent = guardianUsers[0];
   const sampleStudent = studentUsers[0];
@@ -749,7 +781,7 @@ async function main(): Promise<void> {
   ${slotRows.length} timetable slots · ${sessionRows.length} sessions
   ${attendanceValues.length} attendance marks
   ${assessmentRows.length} assessments · ${gradeValues.length} grades
-  ${assignmentValues.length} homework items
+  ${assignmentValues.length} homework items · ${appreciationValues.length} appreciations
 
   logins — password for all: ${DEMO_PASSWORD}
   ─────────────────────────────────────────────

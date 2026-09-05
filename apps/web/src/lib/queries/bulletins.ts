@@ -8,15 +8,19 @@ import {
   grades,
   sessions,
   students,
+  subjectAppreciations,
   subjects,
   terms,
 } from "@madrasti/db";
 import {
   type BulletinClassSubject,
+  type BulletinLine,
   type BulletinStudentInput,
   type ComposedBulletin,
   type Mark,
   composeClassBulletins,
+  roundNullable,
+  subjectAverage,
 } from "@madrasti/grading";
 import { and, asc, eq, gte, isNull, lte, sql } from "drizzle-orm";
 
@@ -92,9 +96,21 @@ async function getClassSubjects(classGroupId: string): Promise<ClassSubjectRef[]
   return rows.map((row) => ({ ...row, coefficient: Number(row.coefficient) }));
 }
 
+/**
+ * A computed line with the subject teacher's remark attached.
+ *
+ * The remark is joined on here rather than passed through
+ * `composeClassBulletins`, which stays pure arithmetic — an appreciation is
+ * not a calculation and the grading package has no business holding one.
+ */
+export type ComputedBulletinLine = BulletinLine & { appreciation: string | null };
+
 export type ComputedClassBulletins = {
   subjects: ClassSubjectRef[];
-  students: (BulletinStudentName & ComposedBulletin)[];
+  students: (BulletinStudentName &
+    Omit<ComposedBulletin, "lines"> & {
+      lines: ComputedBulletinLine[];
+    })[];
 };
 
 /**
@@ -112,11 +128,12 @@ export async function computeClassBulletins(
   classGroupId: string,
   termId: string
 ): Promise<ComputedClassBulletins> {
-  const [roster, classSubjectList, marks, absences] = await Promise.all([
+  const [roster, classSubjectList, marks, absences, appreciations] = await Promise.all([
     getRoster(classGroupId),
     getClassSubjects(classGroupId),
     getTermMarks(classGroupId, termId),
     getTermAbsenceCounts(classGroupId, termId),
+    getTermAppreciations(classGroupId, termId),
   ]);
 
   const marksByStudent = new Map<string, Record<string, Mark[]>>();
@@ -145,11 +162,19 @@ export async function computeClassBulletins(
   // it is asserted in the package's own tests rather than assumed here.
   return {
     subjects: classSubjectList,
-    students: roster.map((student, index) => ({
-      ...student,
+    students: roster.map((student, index) => {
       // biome-ignore lint/style/noNonNullAssertion: same length, same order.
-      ...composed[index]!,
-    })),
+      const bulletin = composed[index]!;
+      return {
+        ...student,
+        ...bulletin,
+        lines: bulletin.lines.map((line) => ({
+          ...line,
+          appreciation:
+            appreciations.get(appreciationKey(student.studentId, line.subjectId)) ?? null,
+        })),
+      };
+    }),
   };
 }
 
@@ -219,6 +244,98 @@ async function getTermAbsenceCounts(
     .groupBy(students.id);
 
   return new Map(rows.map((row) => [row.studentId, row.absent]));
+}
+
+const appreciationKey = (studentId: string, subjectId: string) => `${studentId}:${subjectId}`;
+
+/**
+ * Every subject remark written for this class this term, in one query.
+ *
+ * Keyed by student and *subject*, not by class+subject: the bulletin prints one
+ * line per subject and does not care which teacher wrote in it. The join back
+ * through `class_subjects` is what supplies that subject id.
+ */
+async function getTermAppreciations(
+  classGroupId: string,
+  termId: string
+): Promise<Map<string, string>> {
+  const rows = await db
+    .select({
+      studentId: subjectAppreciations.studentId,
+      subjectId: classSubjects.subjectId,
+      text: subjectAppreciations.text,
+    })
+    .from(subjectAppreciations)
+    .innerJoin(classSubjects, eq(classSubjects.id, subjectAppreciations.classSubjectId))
+    .where(
+      and(eq(classSubjects.classGroupId, classGroupId), eq(subjectAppreciations.termId, termId))
+    );
+
+  return new Map(rows.map((row) => [appreciationKey(row.studentId, row.subjectId), row.text]));
+}
+
+/** One row of a teacher's appreciation sheet: a pupil and what is written about them. */
+export type AppreciationSheetRow = BulletinStudentName & {
+  text: string | null;
+  /** The term average in *this* subject — the figure the remark is about. */
+  average: number | null;
+};
+
+/**
+ * The sheet a teacher writes on: the class roster with any existing remark.
+ *
+ * The subject average travels with each row on purpose. A remark written
+ * without the mark in front of you is a remark about the pupil you remember
+ * rather than the term they actually had, and a teacher writing thirty of
+ * these in one sitting will otherwise open a second screen to check.
+ */
+export async function getAppreciationSheet(
+  classSubjectId: string,
+  termId: string
+): Promise<AppreciationSheetRow[]> {
+  const [target] = await db
+    .select({ classGroupId: classSubjects.classGroupId, subjectId: classSubjects.subjectId })
+    .from(classSubjects)
+    .where(eq(classSubjects.id, classSubjectId))
+    .limit(1);
+  if (!target) return [];
+
+  const [roster, written, marks] = await Promise.all([
+    getRoster(target.classGroupId),
+    db
+      .select({ studentId: subjectAppreciations.studentId, text: subjectAppreciations.text })
+      .from(subjectAppreciations)
+      .where(
+        and(
+          eq(subjectAppreciations.classSubjectId, classSubjectId),
+          eq(subjectAppreciations.termId, termId)
+        )
+      ),
+    getTermMarks(target.classGroupId, termId),
+  ]);
+
+  const textByStudent = new Map(written.map((row) => [row.studentId, row.text]));
+
+  // Same arithmetic as the bulletin — `subjectAverage`, not SQL `avg`, because
+  // an absence is a null score that must not be averaged around.
+  const marksByStudent = new Map<string, Mark[]>();
+  for (const row of marks) {
+    if (row.subjectId !== target.subjectId) continue;
+    const list = marksByStudent.get(row.studentId) ?? [];
+    list.push({
+      score: row.score === null ? null : Number(row.score),
+      isAbsent: row.isAbsent,
+      maxScore: Number(row.maxScore),
+      coefficient: Number(row.coefficient),
+    });
+    marksByStudent.set(row.studentId, list);
+  }
+
+  return roster.map((student) => ({
+    ...student,
+    text: textByStudent.get(student.studentId) ?? null,
+    average: roundNullable(subjectAverage(marksByStudent.get(student.studentId) ?? [])),
+  }));
 }
 
 /** The class and term, for a screen heading. Null when either does not exist. */

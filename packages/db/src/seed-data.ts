@@ -222,6 +222,41 @@ export const HOMEWORK_TITLES: Record<string, string[]> = {
 };
 
 /**
+ * Subject appreciations, in the language the subject is taught in.
+ *
+ * Arabic for Arabic and Éducation islamique, French for the rest — which is
+ * how a Moroccan private school actually writes them, and it means the seeded
+ * bulletin is a **mixed-script document** from the first day of the demo. That
+ * is the case the A4 print stylesheet has to survive (story 8.4): an Arabic
+ * bulletin carrying French remarks, and a French one carrying Arabic. A seed
+ * written entirely in one language would let a broken layout ship.
+ *
+ * Deliberately banal. These are the sentences that appear on real bulletins,
+ * and the demo is more convincing for a head teacher when they read like his
+ * staff's than when they read like copy.
+ */
+export const APPRECIATIONS_FR = [
+  "Élève sérieux, en progrès constant ce trimestre.",
+  "Résultats satisfaisants. Doit participer davantage à l'oral.",
+  "Trimestre difficile. Un travail plus régulier à la maison est nécessaire.",
+  "Très bon niveau, continue ainsi.",
+  "Des capacités réelles, mais un manque d'attention en classe.",
+  "Ensemble correct. Doit soigner la présentation des devoirs.",
+];
+
+export const APPRECIATIONS_AR = [
+  "تلميذ مجتهد، مستواه في تحسن مستمر.",
+  "نتائج مرضية. عليه المشاركة أكثر داخل القسم.",
+  "أسدس صعب. يتطلب عملاً أكثر انتظاماً في البيت.",
+  "مستوى جيد جداً، واصل على هذا المنوال.",
+  "قدرات حقيقية، لكن ينقصه التركيز أثناء الدرس.",
+  "عمل مقبول. عليه الاعتناء بتقديم الواجبات.",
+];
+
+/** Subjects taught in Arabic — their remarks are written in Arabic. */
+export const ARABIC_MEDIUM_SUBJECTS = ["ARA", "EIS"];
+
+/**
  * The teaching day, Monday–Saturday. Saturday is a half day.
  * Times are the standard Moroccan school rhythm with a long midday break.
  */

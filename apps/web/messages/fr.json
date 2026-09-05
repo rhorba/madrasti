@@ -127,7 +127,9 @@
     "slotTooLong": "La séance est trop longue (6 heures au maximum).",
     "sameDay": "Choisissez deux jours différents.",
     "nothingToCopy": "Aucune séance à dupliquer ce jour-là.",
-    "allSlotsConflict": "Toutes les séances entrent en conflit ce jour-là."
+    "allSlotsConflict": "Toutes les séances entrent en conflit ce jour-là.",
+    "appreciationTooLong": "Appréciation trop longue.",
+    "noAppreciations": "Aucune appréciation à enregistrer."
   },
   "admin": {
     "home": {
@@ -530,7 +532,25 @@
     "average": "Moyenne",
     "counted": "Notes",
     "absences": "Absences",
-    "noStudents": "Aucun élève inscrit dans cette classe."
+    "noStudents": "Aucun élève inscrit dans cette classe.",
+    "appreciations": "Appréciations"
+  },
+  "appreciations": {
+    "title": "Appréciations",
+    "intro": "Une appréciation par élève pour cette matière et ce trimestre. Elle est imprimée sur le bulletin telle que vous l'écrivez, dans votre langue.",
+    "backToMarks": "Retour aux notes",
+    "chooseClass": "Choisir une classe et une matière",
+    "chooseTerm": "Choisir un trimestre",
+    "noClasses": "Aucune classe ni trimestre n'est disponible.",
+    "noStudents": "Aucun élève inscrit dans cette classe.",
+    "placeholder": "Élève sérieux, doit participer davantage.",
+    "appreciationFor": "Appréciation pour {name}",
+    "tooLong": "{over} caractère(s) de trop — maximum {max}.",
+    "writtenCount": "{count} appréciation(s) sur {total}",
+    "save": "Enregistrer",
+    "retry": "Réessayer",
+    "saved": "Appréciations enregistrées.",
+    "textKept": "Vos appréciations sont conservées."
   },
   "homework": {
     "title": "Devoirs",

@@ -4,5 +4,6 @@ export * from "./academic.js";
 export * from "./people.js";
 export * from "./attendance.js";
 export * from "./grade.js";
+export * from "./bulletin.js";
 export * from "./timetable.js";
 export * from "./homework.js";

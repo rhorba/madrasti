@@ -5,6 +5,7 @@ import {
   db,
   enrolments,
   grades,
+  subjectAppreciations,
   terms,
 } from "@madrasti/db";
 import { and, eq, isNull } from "drizzle-orm";
@@ -240,6 +241,124 @@ describe("computeClassBulletins", () => {
   it("returns an empty result for a class that does not exist", async () => {
     const result = await computeClassBulletins("00000000-0000-4000-8000-000000000000", f.termId);
     expect(result.students).toEqual([]);
+  });
+});
+
+describe("appreciations on the computed lines", () => {
+  /**
+   * The remark and the marks are gathered by different queries and joined in
+   * memory, which is the shape that puts a sentence about one child on another
+   * child's bulletin. Each test therefore writes one remark carrying a marker
+   * nothing else could produce, and asserts both where it lands and — the half
+   * that actually catches the bug — that it lands nowhere else.
+   *
+   * The seed writes appreciations of its own, deliberately (a bulletin with no
+   * remarks would never exercise the print layout). So nothing here asserts
+   * "everything is null", and nothing deletes a seeded row: the fixtures are
+   * removed by id.
+   */
+  const MARKER = "ZZ-fixture-";
+  /** What was there before, so a seeded remark is put back rather than lost. */
+  const touched: { studentId: string; termId: string; previous: string | null }[] = [];
+
+  afterEach(async () => {
+    for (const entry of touched.splice(0)) {
+      const where = and(
+        eq(subjectAppreciations.classSubjectId, f.classSubjectId),
+        eq(subjectAppreciations.studentId, entry.studentId),
+        eq(subjectAppreciations.termId, entry.termId)
+      );
+      if (entry.previous === null) {
+        await db.delete(subjectAppreciations).where(where);
+      } else {
+        await db.update(subjectAppreciations).set({ text: entry.previous }).where(where);
+      }
+    }
+  });
+
+  async function writeAppreciation(studentId: string, text: string, termId = f.termId) {
+    const where = and(
+      eq(subjectAppreciations.classSubjectId, f.classSubjectId),
+      eq(subjectAppreciations.studentId, studentId),
+      eq(subjectAppreciations.termId, termId)
+    );
+    const [existing] = await db
+      .select({ text: subjectAppreciations.text })
+      .from(subjectAppreciations)
+      .where(where);
+    touched.push({ studentId, termId, previous: existing?.text ?? null });
+
+    // The seed may already have written for this pupil and subject — this is
+    // the same upsert the action performs, so the fixture cannot collide.
+    await db
+      .insert(subjectAppreciations)
+      .values({
+        classSubjectId: f.classSubjectId,
+        studentId,
+        termId,
+        text,
+        recordedBy: f.actorId,
+      })
+      .onConflictDoUpdate({
+        target: [
+          subjectAppreciations.classSubjectId,
+          subjectAppreciations.studentId,
+          subjectAppreciations.termId,
+        ],
+        set: { text },
+      });
+  }
+
+  it("attaches a remark to the right pupil, in the right subject, and to no other line", async () => {
+    const [first] = f.studentIds as [string];
+    const text = `${MARKER}des progrès constants.`;
+    await writeAppreciation(first, text);
+
+    const result = await computeClassBulletins(f.classGroupId, f.termId);
+
+    const line = result.students
+      .find((student) => student.studentId === first)
+      ?.lines.find((entry) => entry.subjectId === f.subjectId);
+    expect(line?.appreciation).toBe(text);
+
+    // Every other line in the class — every pupil, every subject.
+    const elsewhere = result.students.flatMap((student) =>
+      student.lines.filter(
+        (entry) =>
+          entry.appreciation === text &&
+          !(student.studentId === first && entry.subjectId === f.subjectId)
+      )
+    );
+    expect(elsewhere).toHaveLength(0);
+  });
+
+  it("does not carry a remark across terms", async () => {
+    // Trimestre 1's sentence on trimestre 2's bulletin is a defect a parent
+    // finds before we do — the same shape as the absence-count bug above, and
+    // the seed writes only into term 1, so the later term must be silent.
+    const [first] = f.studentIds as [string];
+    await writeAppreciation(first, `${MARKER}trimestre 1.`, f.termId);
+
+    const later = await computeClassBulletins(f.classGroupId, f.emptyTermId);
+    for (const student of later.students) {
+      for (const entry of student.lines) {
+        expect(entry.appreciation).toBeNull();
+      }
+    }
+  });
+
+  it("keeps an Arabic remark intact through the read", async () => {
+    // Arabic-medium subjects are written in Arabic, so a bulletin is a
+    // mixed-script document and this text reaches paper exactly as authored.
+    const [first] = f.studentIds as [string];
+    const text = `${MARKER}تلميذ مجتهد، مستواه في تحسن مستمر.`;
+    await writeAppreciation(first, text);
+
+    const result = await computeClassBulletins(f.classGroupId, f.termId);
+    const line = result.students
+      .find((student) => student.studentId === first)
+      ?.lines.find((entry) => entry.subjectId === f.subjectId);
+    expect(line?.appreciation).toBe(text);
   });
 });
 

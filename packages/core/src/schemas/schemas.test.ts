@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { APPRECIATION_MAX_LENGTH } from "../constants.js";
 import { isRtl } from "../enums.js";
 import {
   academicYearSchema,
+  appreciationEntrySchema,
   assignmentSchema,
   assignmentUpdateSchema,
   attachmentRequestSchema,
@@ -16,6 +18,7 @@ import {
   massarCodeSchema,
   passwordSchema,
   phoneSchema,
+  saveAppreciationsSchema,
   saveAttendanceSchema,
   saveGradesSchema,
   signInSchema,
@@ -369,6 +372,66 @@ describe("auth", () => {
         "newPassword"
       )
     ).toBe("errors.passwordUnchanged");
+  });
+});
+
+describe("appreciations", () => {
+  const id = "b3f1a1f4-5c2e-4b6d-9f1a-1f45c2e4b6d9";
+  const other = "c4a2b2e5-6d3f-4c7e-8a2b-2e56d3f4c7e8";
+
+  it("accepts an empty remark, because clearing one is a real instruction", () => {
+    // The schema must not treat an erasure as a validation failure: the action
+    // deletes the row, and the CHECK in the database is what refuses to store
+    // a blank as though it were a remark.
+    const parsed = appreciationEntrySchema.safeParse({ studentId: id, text: "   " });
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.text).toBe("");
+  });
+
+  it("keeps an Arabic remark intact", () => {
+    // A teacher of an Arabic-medium class writes in Arabic, and the sentence
+    // is stored and printed exactly as authored — never translated
+    // (`.logs/decisions.md`, 2026-09-05).
+    const text = "تلميذ مجتهد، مستواه في تحسن مستمر.";
+    const parsed = appreciationEntrySchema.safeParse({ studentId: id, text });
+    expect(parsed.success && parsed.data.text).toBe(text);
+  });
+
+  it("refuses a remark too long to fit a bulletin, with a translation key", () => {
+    expect(
+      issueFor(
+        appreciationEntrySchema.safeParse({
+          studentId: id,
+          text: "a".repeat(APPRECIATION_MAX_LENGTH + 1),
+        }),
+        "text"
+      )
+    ).toBe("errors.appreciationTooLong");
+    expect(
+      appreciationEntrySchema.safeParse({
+        studentId: id,
+        text: "a".repeat(APPRECIATION_MAX_LENGTH),
+      }).success
+    ).toBe(true);
+  });
+
+  it("refuses an empty sheet", () => {
+    expect(
+      issueFor(
+        saveAppreciationsSchema.safeParse({ classSubjectId: id, termId: other, entries: [] })
+      )
+    ).toBe("errors.noAppreciations");
+  });
+
+  it("carries the class+subject and the term, never the subject alone", () => {
+    // Both are required: the class+subject is the authorisation, and without
+    // the term a remark would land on whichever bulletin was generated next.
+    expect(
+      saveAppreciationsSchema.safeParse({
+        classSubjectId: id,
+        entries: [{ studentId: other, text: "Bien." }],
+      }).success
+    ).toBe(false);
   });
 });
 

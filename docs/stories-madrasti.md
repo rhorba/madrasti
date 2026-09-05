@@ -146,7 +146,7 @@ parent has been proven unable to reach another family's child.
 | | Story | Pts |
 |---|---|---|
 | 8.1 | Bulletin generation: lines, general average, rank, absence total | 5 |
-| 8.2 | **D2** Per-subject appreciations (picklist + free-text override, pending PRD Q4) | 3 |
+| 8.2 | **D2** Per-subject appreciations — free text, per the client's answer to Q4 | 3 |
 | 8.3 | **D1/D3** Review and publish per class per term; freeze; block grade edits under a published bulletin | 5 |
 | 8.4 | **D4** A4 print stylesheet, correct in `ar`, `fr`, `en` | 5 |
 | 8.5 | Parent/student view of published bulletins only | 3 |
@@ -154,8 +154,10 @@ parent has been proven unable to reach another family's child.
 **Exit:** an Arabic bulletin **printed on real paper** and checked by someone
 who reads Arabic. Browser preview is not evidence.
 
-**Blocked on client answers:** PRD Q2 (existing layout to reproduce), Q3
-(is rank shown), Q4 (appreciation format). Ask in Sprint 6 at the latest.
+**Client answers received 2026-09-05** (see `.logs/decisions.md`): rank is
+shown; appreciations are free text, not a picklist; there is no existing layout
+to reproduce, so one is designed from the Moroccan convention. The picklist this
+backlog had assumed as its fallback is retired.
 
 ---
 

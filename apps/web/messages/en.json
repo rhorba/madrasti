@@ -127,7 +127,9 @@
     "slotTooLong": "The lesson is too long (6 hours maximum).",
     "sameDay": "Choose two different days.",
     "nothingToCopy": "No lessons to duplicate on that day.",
-    "allSlotsConflict": "Every lesson clashes on that day."
+    "allSlotsConflict": "Every lesson clashes on that day.",
+    "appreciationTooLong": "Appreciation is too long.",
+    "noAppreciations": "No appreciations to save."
   },
   "admin": {
     "home": {
@@ -530,7 +532,25 @@
     "average": "Average",
     "counted": "Marks",
     "absences": "Absences",
-    "noStudents": "No students in this class."
+    "noStudents": "No students in this class.",
+    "appreciations": "Appreciations"
+  },
+  "appreciations": {
+    "title": "Appreciations",
+    "intro": "One remark per student for this subject and term. It prints on the report card exactly as you write it, in your own language.",
+    "backToMarks": "Back to marks",
+    "chooseClass": "Choose a class and subject",
+    "chooseTerm": "Choose a term",
+    "noClasses": "No class or term is available.",
+    "noStudents": "No students in this class.",
+    "placeholder": "Serious pupil, should take part more.",
+    "appreciationFor": "Appreciation for {name}",
+    "tooLong": "{over} character(s) too many — maximum {max}.",
+    "writtenCount": "{count} of {total} written",
+    "save": "Save",
+    "retry": "Try again",
+    "saved": "Appreciations saved.",
+    "textKept": "Your appreciations have been kept."
   },
   "homework": {
     "title": "Homework",

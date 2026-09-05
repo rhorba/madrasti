@@ -74,12 +74,22 @@ export default async function GradesPage({
           title={t("title")}
           description={`${active.className} · ${subjectName} · ${termLabel}`}
           action={
-            <Link
-              href="/teacher"
-              className="text-sm text-[var(--action-primary)] underline underline-offset-2"
-            >
-              {t("backToDay")}
-            </Link>
+            <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {/* Written once a term, always from a class and subject already
+                  on screen — so it lives here rather than on the home page. */}
+              <Link
+                href={`/teacher/appreciations?cs=${active.id}`}
+                className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+              >
+                {t("appreciations")}
+              </Link>
+              <Link
+                href="/teacher"
+                className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+              >
+                {t("backToDay")}
+              </Link>
+            </span>
           }
         />
 

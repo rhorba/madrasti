@@ -178,7 +178,13 @@ describe("attendance", () => {
         })
         .onConflictDoUpdate({
           target: [s.attendance.sessionId, s.attendance.studentId],
-          set: { status: "absent" },
+          // `minutes_late` is cleared with the status, exactly as the register
+          // action does it. Setting the status alone passed or failed on the
+          // luck of which row the seed happened to put first: if that pupil was
+          // marked *late*, the update left their minutes behind on an `absent`
+          // row and the CHECK — correctly — refused it. The application never
+          // writes that state; only this test did.
+          set: { status: "absent", minutesLate: null },
         });
 
       const rows = await tx
@@ -192,6 +198,7 @@ describe("attendance", () => {
         );
       expect(rows).toHaveLength(1);
       expect(rows[0]?.status).toBe("absent");
+      expect(rows[0]?.minutesLate).toBeNull();
     });
   });
 });

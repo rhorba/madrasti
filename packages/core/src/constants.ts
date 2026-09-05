@@ -44,3 +44,12 @@ export const SCHOOL_TIMEZONE = "Africa/Casablanca";
 
 /** Homework horizon shown on the student and parent home screens. */
 export const UPCOMING_HOMEWORK_DAYS = 14;
+
+/**
+ * The longest appreciation a teacher may write per subject.
+ *
+ * Not an arbitrary field length: twelve subject remarks plus the head
+ * teacher's have to fit on one A4 sheet alongside the marks table, in three
+ * scripts. Anything longer stops being a bulletin and starts being a letter.
+ */
+export const APPRECIATION_MAX_LENGTH = 300;

@@ -232,6 +232,59 @@ export const bulletinLines = pgTable(
   })
 );
 
+/**
+ * A teacher's written remark about one pupil, in one subject, for one term.
+ *
+ * This is the *draft*. `bulletin_lines.appreciation` is the frozen copy taken
+ * at publication, and the two are deliberately separate tables: the remark is
+ * written over weeks by the subject teacher and edited freely, while the
+ * published line is a document the school has already handed to a family and
+ * must never change underneath them.
+ *
+ * Keyed on `class_subject_id` rather than on the subject, because that column
+ * *is* the authorisation: it names the class, the subject and the one teacher
+ * entitled to write here. A remark keyed on `subject_id` would let the maths
+ * teacher of 5eme A write in the French column of 5eme B.
+ *
+ * The text is stored exactly as the teacher wrote it and is never translated
+ * (`.logs/decisions.md`, 2026-09-05) — it is a professional judgement about a
+ * named child, not UI copy. A cleared remark deletes its row; the CHECK is
+ * what stops an empty string being stored as if it were a remark.
+ */
+export const subjectAppreciations = pgTable(
+  "subject_appreciations",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    classSubjectId: uuid("class_subject_id")
+      .notNull()
+      .references(() => classSubjects.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    termId: uuid("term_id")
+      .notNull()
+      .references(() => terms.id, { onDelete: "cascade" }),
+    text: text("text").notNull(),
+    recordedBy: uuid("recorded_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+    ...timestamps,
+  },
+  (t) => ({
+    onePerStudentSubjectTerm: unique("subject_appreciations_unique").on(
+      t.classSubjectId,
+      t.studentId,
+      t.termId
+    ),
+    // The sheet is always read whole: one class+subject for one term.
+    bySheet: index("subject_appreciations_sheet_idx").on(t.classSubjectId, t.termId),
+    // Reading a bulletin goes the other way — one pupil, every subject.
+    byStudentTerm: index("subject_appreciations_student_term_idx").on(t.studentId, t.termId),
+    notBlank: check("subject_appreciations_not_blank", sql`length(btrim(${t.text})) > 0`),
+  })
+);
+
 export const attendanceRelations = relations(attendance, ({ one }) => ({
   session: one(sessions, { fields: [attendance.sessionId], references: [sessions.id] }),
   student: one(students, { fields: [attendance.studentId], references: [students.id] }),
@@ -267,4 +320,16 @@ export const bulletinsRelations = relations(bulletins, ({ one, many }) => ({
 export const bulletinLinesRelations = relations(bulletinLines, ({ one }) => ({
   bulletin: one(bulletins, { fields: [bulletinLines.bulletinId], references: [bulletins.id] }),
   subject: one(subjects, { fields: [bulletinLines.subjectId], references: [subjects.id] }),
+}));
+
+export const subjectAppreciationsRelations = relations(subjectAppreciations, ({ one }) => ({
+  classSubject: one(classSubjects, {
+    fields: [subjectAppreciations.classSubjectId],
+    references: [classSubjects.id],
+  }),
+  student: one(students, {
+    fields: [subjectAppreciations.studentId],
+    references: [students.id],
+  }),
+  term: one(terms, { fields: [subjectAppreciations.termId], references: [terms.id] }),
 }));
