@@ -1,7 +1,7 @@
 import { DEFAULT_GRADING_MAX } from "@madrasti/core";
 import { type Mark, generalAverage, subjectAverage } from "./average.js";
 import { rankStudents } from "./rank.js";
-import { roundNullable } from "./scale.js";
+import { roundAverage, roundNullable } from "./scale.js";
 
 /**
  * Composing a class's bulletins for one term.
@@ -141,4 +141,58 @@ export function composeClassBulletins(
 /** `rankStudents`, indexed by id so the callers above can look a rank up. */
 function rankById(entries: { id: string; average: number | null }[]): Map<string, number | null> {
   return new Map(rankStudents(entries).map((entry) => [entry.id, entry.rank]));
+}
+
+/** The foot of the printed subject table. */
+export type BulletinTotals = {
+  /** Coefficients that actually counted towards the general average. */
+  coefficient: number;
+  /** The points column, added up. */
+  weightedPoints: number;
+  /** How many subjects contributed — what "counted" means, in plain figures. */
+  countedSubjects: number;
+};
+
+/**
+ * Total the coefficient and points columns of a printed bulletin.
+ *
+ * This exists so that **a parent who divides the points total by the
+ * coefficient total gets the general average back.** They do check. It is the
+ * one arithmetic claim on the document that a reader can verify with the
+ * calculator on their phone, and a bulletin that fails it is a bulletin the
+ * school has to defend.
+ *
+ * Which is why a subject with no mark contributes **neither** its coefficient
+ * nor its points — exactly the rule `generalAverage` already applies. Summing
+ * every coefficient on the sheet, including the ones that never counted, is the
+ * obvious implementation and it is wrong: it inflates the denominator, and the
+ * hand-check then lands a few tenths below the printed average with nothing on
+ * the page to explain the gap.
+ *
+ * The totals are summed from the **rounded** line values rather than recomputed
+ * from full precision, because these two numbers are a statement *about the
+ * printed column*. A total that did not match the column above it would be
+ * indefensible however defensible its provenance.
+ */
+export function bulletinTotals(
+  lines: readonly Pick<BulletinLine, "average" | "coefficient" | "weightedPoints">[]
+): BulletinTotals {
+  let coefficient = 0;
+  let weightedPoints = 0;
+  let countedSubjects = 0;
+
+  for (const line of lines) {
+    // `average === null` is the subject that had no counted mark. `null` points
+    // cannot be added either way, and the two always travel together.
+    if (line.average === null || line.weightedPoints === null) continue;
+    coefficient += line.coefficient;
+    weightedPoints += line.weightedPoints;
+    countedSubjects += 1;
+  }
+
+  return {
+    coefficient: roundAverage(coefficient),
+    weightedPoints: roundAverage(weightedPoints),
+    countedSubjects,
+  };
 }

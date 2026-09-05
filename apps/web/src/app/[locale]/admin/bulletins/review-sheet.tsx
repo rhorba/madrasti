@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 import { APPRECIATION_MAX_LENGTH, BULLETIN_DECISIONS, type BulletinDecision } from "@madrasti/core";
+import { Printer } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -47,6 +49,7 @@ export function ReviewSheet({
   publishedAt: string | null;
 }) {
   const t = useTranslations("bulletins");
+  const tp = useTranslations("bulletinDoc");
   const te = useTranslations();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -265,9 +268,22 @@ export function ReviewSheet({
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-[var(--text-secondary)]">{t("frozen")}</p>
-                <Button variant="secondary" onClick={() => setConfirming(true)}>
-                  {t("unpublish")}
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Printing is offered only once the class is published,
+                      because only a published bulletin exists on paper. The
+                      print screen enforces that too — this is where it is
+                      *explained*. */}
+                  <Link
+                    href={`/admin/bulletins/print?class=${classGroupId}&term=${termId}`}
+                    className="inline-flex h-11 items-center gap-2 rounded-md border border-[var(--border-strong)] px-4 text-base font-medium hover:bg-[var(--bg-sunken)]"
+                  >
+                    <Printer aria-hidden size={18} strokeWidth={1.5} />
+                    {tp("print")}
+                  </Link>
+                  <Button variant="secondary" onClick={() => setConfirming(true)}>
+                    {t("unpublish")}
+                  </Button>
+                </div>
               </div>
             )}
           </div>

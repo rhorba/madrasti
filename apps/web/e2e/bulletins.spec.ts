@@ -273,3 +273,244 @@ test.describe("bulletins in Arabic", () => {
     await expect(decision.getByRole("option", { name: "ناجح مع التهاني" })).toHaveCount(1);
   });
 });
+
+/**
+ * Story 8.4 — the bulletin on paper.
+ *
+ * The exit criterion for this sprint is a sheet of A4 read by an Arabic
+ * reader, and no test can stand in for that. What these tests can hold is
+ * everything that would make such a sheet wrong before anyone printed it: that
+ * only published bulletins reach paper, that the application's chrome does not,
+ * that the sheet mirrors in Arabic, and — the one most likely to be missed —
+ * that an Arabic bulletin prints the Western digits a Moroccan parent reads
+ * rather than the Eastern Arabic-Indic ones ICU may hand over instead.
+ *
+ * `emulateMedia({ media: "print" })` is what makes these tests about paper
+ * rather than about a screen: it applies the real `@media print` rules.
+ */
+
+/**
+ * Publish the first class, run the body, and always take it back.
+ *
+ * The `finally` is the point. A test that threw while a class was published
+ * would leave that term frozen for everything after it, and `grades.spec.ts`
+ * would fail further down the run with an error about bulletins that reads as
+ * a product bug and is not one.
+ */
+async function withPublishedClass(page: Page, body: () => Promise<void>) {
+  await signInAsAdmin(page);
+  await page.getByRole("link", { name: "Bulletins" }).first().click();
+  await page.waitForURL(/\/admin\/bulletins/);
+  await page.getByRole("button", { name: "Publier les bulletins" }).click();
+  await expect(page.getByText("Bulletins publiés.", { exact: false })).toBeVisible();
+
+  try {
+    await body();
+  } finally {
+    // Restored before the clean-up runs: a body that resized the viewport and
+    // then threw would otherwise leave the unpublish button on a 360px layout.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/fr/admin/bulletins");
+    await unpublish(page, "Fin du test end-to-end.");
+  }
+}
+
+/** Every bulletin on the print run, as the reader meets them. */
+function sheets(page: Page, name: string | RegExp = "Bulletin scolaire") {
+  return page.getByRole("article", { name });
+}
+
+const ANY_SHEET = /Bulletin scolaire|كشف النقط|Report card/;
+
+test.describe("the printed bulletin", () => {
+  test("prints one sheet per published pupil, with the marks and the totals", async ({ page }) => {
+    await withPublishedClass(page, async () => {
+      await page.getByRole("link", { name: "Imprimer" }).click();
+      await page.waitForURL(/\/admin\/bulletins\/print/);
+
+      expect(await sheets(page).count()).toBeGreaterThan(10);
+
+      const first = sheets(page).first();
+      await expect(first.getByRole("columnheader", { name: "Matière" })).toBeVisible();
+      await expect(first.getByRole("columnheader", { name: "Coef." })).toBeVisible();
+      await expect(
+        first.getByRole("columnheader", { name: "Appréciation du professeur" })
+      ).toBeVisible();
+
+      // What a school files the sheet by, and what makes it the school's.
+      await expect(first.getByText("Code Massar", { exact: true })).toBeVisible();
+      await expect(first.getByText("Groupe Scolaire Al Massira")).toBeVisible();
+
+      // Two decimals so a column of marks aligns — 12,50 and not 12,5.
+      await expect(first.getByText(/^\d{1,2},\d{2}$/).first()).toBeVisible();
+
+      // Signed by hand, by two people. A bulletin nobody signs is a printout.
+      await expect(first.getByText("Le Directeur")).toBeVisible();
+      await expect(first.getByText("Signature du parent ou tuteur")).toBeVisible();
+    });
+  });
+
+  test("the parent's hand-check adds up on the printed page", async ({ page }) => {
+    // Points divided by coefficients must give back the general average printed
+    // below them. `bulletinTotals` proves that in isolation; this proves the
+    // numbers that reach paper are the ones it produced.
+    await withPublishedClass(page, async () => {
+      await page.goto("/fr/admin/bulletins/print");
+      const first = sheets(page).first();
+
+      const parse = (text: string) => Number.parseFloat(text.replace(",", "."));
+      const cells = await first.locator("tfoot tr td").allTextContents();
+      const [, coefficient, points] = cells;
+
+      const average = await first
+        .locator("dd")
+        .filter({ hasText: /^\d+,\d+ \/ 20$/ })
+        .first()
+        .textContent();
+
+      expect(parse((average ?? "").split("/")[0] ?? "")).toBeCloseTo(
+        parse(points ?? "") / parse(coefficient ?? ""),
+        1
+      );
+    });
+  });
+
+  test("leaves the application behind when it reaches paper", async ({ page }) => {
+    await withPublishedClass(page, async () => {
+      await page.goto("/fr/admin/bulletins/print");
+      await expect(page.getByRole("button", { name: "Imprimer" })).toBeVisible();
+
+      // From here the browser renders for the printer, not for the screen.
+      await page.emulateMedia({ media: "print" });
+
+      await expect(page.getByRole("button", { name: "Imprimer" })).toBeHidden();
+      await expect(page.getByText("une page par élève.", { exact: false })).toBeHidden();
+      // The document itself survives.
+      await expect(sheets(page).first()).toBeVisible();
+
+      await page.emulateMedia({ media: "screen" });
+    });
+  });
+
+  test("refuses to print a class the council has not published", async ({ page }) => {
+    // A draft looks exactly like a bulletin. The difference is that nobody has
+    // agreed it, so it must never reach a printer.
+    await signInAsAdmin(page);
+    await page.goto("/fr/admin/bulletins/print");
+
+    await expect(page.getByText(/Aucun bulletin publié pour cette classe/)).toBeVisible();
+    await expect(sheets(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Imprimer" })).toHaveCount(0);
+  });
+
+  test("fits a 360px phone in every language", async ({ page }) => {
+    await withPublishedClass(page, async () => {
+      await page.setViewportSize({ width: 360, height: 740 });
+      for (const locale of ["ar", "fr", "en"]) {
+        await page.goto(`/${locale}/admin/bulletins/print`);
+        await expect(sheets(page, ANY_SHEET).first()).toBeVisible();
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+        );
+        expect(overflow, `${locale} print page overflows at 360px`).toBe(false);
+      }
+    });
+  });
+});
+
+test.describe("the printed bulletin in Arabic", () => {
+  test("mirrors, is really Arabic, and uses the digits a Moroccan parent reads", async ({
+    page,
+  }) => {
+    await withPublishedClass(page, async () => {
+      await page.goto("/ar/admin/bulletins/print");
+      await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+
+      const first = sheets(page, "كشف النقط").first();
+      await expect(first).toBeVisible();
+
+      // Not French behind an RTL layout (§16.6) — the document is translated.
+      await expect(first.getByRole("columnheader", { name: "المادة" })).toBeVisible();
+      await expect(first.getByRole("columnheader", { name: "المعامل" })).toBeVisible();
+      await expect(first.getByText("رمز مسار", { exact: true })).toBeVisible();
+      await expect(first.getByText("توقيع ولي الأمر")).toBeVisible();
+      await expect(first.getByText("مجموعة مدارس المسيرة")).toBeVisible();
+
+      // The assertion most likely to be the one that matters: Morocco writes
+      // school marks in Western digits. `١٢٫٥٠` is right in Cairo and wrong in
+      // Rabat, and which one ICU hands over is not ours to assume.
+      const printed = (await first.textContent()) ?? "";
+      expect(printed, "Eastern Arabic-Indic digits on a Moroccan bulletin").not.toMatch(/[٠-٩]/);
+      expect(printed).toMatch(/\d{1,2},\d{2}/);
+
+      // And the date is still Arabic, rather than having followed the digits
+      // into French.
+      await expect(first.getByText(/حُرر في .*\d{4}/)).toBeVisible();
+
+      // Bidi, which only shows up by looking at the sheet. Both of these were
+      // real defects found by rendering the Arabic bulletin and reading it.
+      //
+      // "11,30 / 20" is two left-to-right numbers around a neutral slash. In an
+      // RTL paragraph the slash takes the paragraph's direction and the whole
+      // expression prints reversed, as "20 / 11,30" — an average out of eleven.
+      const average = first.locator("dd[dir=ltr]").first();
+      await expect(average).toHaveText(/^\d{1,2},\d{2} \/ \d+$/);
+
+      // The school's Latin address inside an Arabic header was reordered the
+      // same way: "12, rue Ibn Sina, Rabat" printed as "rue Ibn Sina, Rabat ,12".
+      await expect(first.getByText(/^12, rue Ibn Sina/)).toHaveAttribute("dir", "auto");
+
+      // The rank label must not repeat itself. `bulletins.rankOf` reads
+      // "الرتبة {rank} من {of}" — beside this document's own label it printed
+      // "الرتبة: الرتبة 20 من 23".
+      const occurrences = ((await first.textContent()) ?? "").match(/الرتبة/g) ?? [];
+      expect(occurrences, "the word الرتبة appears twice — label and value").toHaveLength(1);
+    });
+  });
+
+  test("carries a mixed-script sheet: Arabic remarks in a French column", async ({ page }) => {
+    // The seed writes Arabic appreciations for Arabe and Éducation islamique
+    // and French for the rest, so every bulletin is a mixed-script document
+    // (story 8.2). `dir="auto"` per cell is what makes both readable on one
+    // sheet, and this is the case a single-language seed would have let ship
+    // broken.
+    await withPublishedClass(page, async () => {
+      await page.goto("/fr/admin/bulletins/print");
+      const remarks = sheets(page).first().locator("td.remark");
+      const texts = (await remarks.allTextContents()).filter((text) => text.trim().length > 0);
+
+      expect(
+        texts.some((text) => /[؀-ۿ]/.test(text)),
+        "no Arabic remark on the sheet"
+      ).toBe(true);
+      expect(
+        texts.some((text) => /[A-Za-zÀ-ÿ]/.test(text)),
+        "no Latin remark on the sheet"
+      ).toBe(true);
+      // Every remark cell decides its own direction from its own text.
+      await expect(remarks.first()).toHaveAttribute("dir", "auto");
+
+      // And an Arabic remark is marked as Arabic, which is what lets the
+      // stylesheet give it the Arabic face at a size that matches the Latin
+      // around it. Without this it renders in the Latin face, noticeably
+      // smaller than the French remark in the row above (§9).
+      await expect(remarks.filter({ hasText: /[؀-ۿ]/ }).first()).toHaveAttribute("lang", "ar");
+    });
+  });
+});
+
+test.describe("the printed bulletin in English", () => {
+  test("is really English, and dates it the way the rest of the document does", async ({
+    page,
+  }) => {
+    await withPublishedClass(page, async () => {
+      await page.goto("/en/admin/bulletins/print");
+      const first = sheets(page, "Report card").first();
+      await expect(first.getByRole("columnheader", { name: "Subject" })).toBeVisible();
+      await expect(first.getByText("Massar code", { exact: true })).toBeVisible();
+      await expect(first.getByText("Parent or guardian signature")).toBeVisible();
+      // en-GB: "15 January 2026", the order every other language here writes.
+      await expect(first.getByText(/Issued on \d{1,2} \w+ \d{4}/)).toBeVisible();
+    });
+  });
+});

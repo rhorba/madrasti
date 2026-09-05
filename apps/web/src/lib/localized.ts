@@ -66,3 +66,18 @@ export function localizedSubject(
 ): string {
   return localized({ fr: row.subjectNameFr, ar: row.subjectNameAr, en: row.subjectNameEn }, locale);
 }
+
+/**
+ * `"ar"` when a free-text string is written in Arabic, otherwise `undefined`.
+ *
+ * For `lang` on the element that holds it. A teacher's remark is stored as she
+ * wrote it and is not translated (`.logs/decisions.md`, story 8.2), so an
+ * Arabic sentence routinely appears in a French document and the reverse.
+ * Without `lang`, that sentence inherits the sheet's Latin face at the sheet's
+ * Latin size — and Arabic set at the same size as Latin reads noticeably
+ * smaller (`CLAUDE.md` §9). Marking the element lets the one rule in
+ * `globals.css` that compensates for this do its job.
+ */
+export function scriptLang(text: string | null | undefined): "ar" | undefined {
+  return text && /[؀-ۿ]/.test(text) ? "ar" : undefined;
+}

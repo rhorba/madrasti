@@ -152,6 +152,123 @@ body {
   }
 }
 
+/* --- the bulletin as a document ------------------------------------------
+ *
+ * These rules are shared by screen and paper on purpose. The sheet a head
+ * teacher sees before pressing print is the same markup, the same rules and
+ * the same column order as the sheet that comes out of the printer; only the
+ * page ground and the margins change. Nobody should have to print in order to
+ * find out what will print (`docs/ui-madrasti.md` §3).
+ */
+
+/*
+ * The print run scrolls; the page never does.
+ *
+ * A bulletin is A4. Reflowing it to fit a 360px phone would produce a preview
+ * that lies about what comes out of the printer — the one thing a print screen
+ * must not do. So the sheet keeps its true width and the run around it scrolls
+ * inside its own container, which is the same answer `Table` already gives for
+ * a wide register (§12.6: the page itself must never scroll sideways).
+ */
+.bulletin-run {
+  overflow-x: auto;
+}
+
+/* Spacing between sheets is set here rather than with a flex `gap`: a flex
+   column that also scrolls horizontally can put the start edge of an over-wide
+   child out of reach, and this container exists precisely to be scrolled. */
+.bulletin-run > * + * {
+  margin-block-start: 2rem;
+}
+
+.bulletin-sheet {
+  /* A4 portrait less the 15mm @page margin on each side. */
+  width: 180mm;
+  margin-inline: auto;
+  color: #000000;
+  background: #ffffff;
+  /* Set slightly tighter than the app: a bulletin is a dense ruled document,
+     and ten subjects plus signatures have to fit on one side of one sheet. */
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+/* Arabic at the same px as Latin reads too small (see the base rule above),
+   and a document that must fit one page cannot absorb the 1.0625em the app
+   applies globally. Re-stated here so the sheet keeps its measure in `ar`. */
+[dir="rtl"] .bulletin-sheet {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.bulletin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.bulletin-table th,
+.bulletin-table td {
+  /* A real bulletin is a ruled grid — it is photocopied, filed and read across
+     a row by a parent following a finger. Hairlines, not the app's rules. */
+  border: 1px solid #000000;
+  padding: 1.5mm 2mm;
+  vertical-align: top;
+}
+
+.bulletin-table thead th {
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.bulletin-table tfoot th,
+.bulletin-table tfoot td {
+  font-weight: 600;
+}
+
+.bulletin-table .numeric {
+  text-align: end;
+  white-space: nowrap;
+}
+
+/* The remark column takes the slack; the numeric columns stay narrow enough
+   that a mark never wraps. Percentages, so this holds at any paper size. */
+.bulletin-table th:first-child,
+.bulletin-table td:first-child {
+  width: 26%;
+}
+
+.bulletin-table .remark {
+  width: 34%;
+  font-size: 0.92em;
+}
+
+.avoid-break {
+  break-inside: avoid;
+}
+
+/*
+ * A label and its value, separated by a colon.
+ *
+ * French sets a space before the colon and English and Arabic do not. That is
+ * a typographic rule about the language, not a fact about any one label, so it
+ * lives here once rather than in thirty translated strings where three of them
+ * would eventually disagree.
+ */
+.labelled::after {
+  content: ":";
+}
+
+:lang(fr) .labelled::after {
+  /* A no-break space before the colon — the French convention, and it must
+     not be where a line wraps. U+00A0 rather than the typographically nicer
+     U+202F narrow no-break space: the document's Arabic-capable face has no
+     glyph for U+202F and printed a tofu box in its place. A slightly wide
+     space beats a missing character on a document a family keeps. */
+  content: " :";
+}
+
 /* --- print: bulletins and class lists are real deliverables on paper ----- */
 
 @media print {
@@ -164,6 +281,8 @@ body {
     --bg-base: #ffffff;
     --bg-sunken: #ffffff;
     --text-primary: #000000;
+    --text-secondary: #000000;
+    --text-muted: #333333;
   }
 
   html,
@@ -177,5 +296,54 @@ body {
   nav,
   button {
     display: none !important;
+  }
+
+  /* The application's shell supplies padding and a max width for reading on a
+     screen. On paper the @page margin is the margin, and anything else eats
+     into a sheet that is already full. */
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /*
+   * One pupil, one sheet. `break-after` on every bulletin but the last —
+   * a trailing blank page out of a 32-pupil print run is the kind of thing a
+   * school notices immediately and forgives slowly.
+   */
+  /* On paper the @page box is the measure, and a scroll container has no
+     meaning — left as-is it can clip a sheet at the page edge. */
+  .bulletin-run {
+    overflow: visible !important;
+  }
+
+  .bulletin-run > * + * {
+    margin-block-start: 0;
+  }
+
+  .bulletin-sheet {
+    width: 100%;
+    break-after: page;
+    /* A sheet must never be split across two pages. Ten subjects, the summary
+       and two signature blocks fit A4; this makes that a rule rather than a
+       hope. */
+    break-inside: avoid;
+  }
+
+  .bulletin-sheet:last-child {
+    break-after: auto;
+  }
+
+  /*
+   * Browsers drop background colours when printing unless told otherwise. The
+   * bulletin does not depend on any — it is black rules on white, which is
+   * also why it survives a greyscale photocopier and a colour-blind reader
+   * (§9, §12.12). Stated so that a later "just add a tint" is a decision
+   * rather than an accident.
+   */
+  .bulletin-table th,
+  .bulletin-table td {
+    background: transparent !important;
   }
 }

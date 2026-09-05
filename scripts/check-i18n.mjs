@@ -61,6 +61,12 @@ const ALLOWED_IDENTICAL = new Set([
   "studentRecord.absences",
   "attendance.absentTotal",
   "parentHome.markAbsent",
+  // The printed bulletin. "Absences", "Coef.", "Points" and "Total" are the
+  // same word in French and English; the Arabic differs, and is checked.
+  "bulletinDoc.absences",
+  "bulletinDoc.coefficient",
+  "bulletinDoc.points",
+  "bulletinDoc.total",
 ]);
 
 function flatten(obj, prefix = "", out = new Map()) {
