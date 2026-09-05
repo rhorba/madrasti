@@ -12,8 +12,11 @@
     "lint": "biome check src"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/s3-request-presigner": "^3.1127.0",
     "@madrasti/core": "workspace:*",
     "@madrasti/db": "workspace:*",
+    "@madrasti/grading": "workspace:*",
     "@madrasti/timetable": "workspace:*",
     "argon2": "^0.41.1",
     "class-variance-authority": "^0.7.1",

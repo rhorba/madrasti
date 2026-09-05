@@ -26,7 +26,16 @@ type Handler<TInput, TData> = (input: TInput, ctx: ActionContext) => Promise<TDa
 type Options<TInput, TData> = {
   /** Roles permitted to run this action. */
   roles: UserRole[];
-  schema: z.ZodType<TInput>;
+  /**
+   * Parsed *into* `TInput`, from anything.
+   *
+   * The third parameter is `unknown` deliberately: the raw value is a
+   * `FormData` or a plain object off the wire, and a schema with `.default()`
+   * or `.coerce` has an input type that differs from what the handler
+   * receives. Pinning both ends to `TInput` would reject exactly the schemas
+   * that do the most work.
+   */
+  schema: z.ZodType<TInput, z.ZodTypeDef, unknown>;
   handler: Handler<TInput, TData>;
   /**
    * Audit entry. Omit only for genuinely read-only actions — every write to an

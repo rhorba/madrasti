@@ -75,6 +75,13 @@ export const assessments = pgTable(
     /** Weights this assessment within its subject for the term. */
     coefficient: numeric("coefficient", { precision: 3, scale: 1 }).notNull().default("1"),
     date: date("date").notNull(),
+    /**
+     * Soft delete. An assessment a teacher created by mistake disappears from
+     * every screen, but its marks are never destroyed — grades are academic
+     * records and CLAUDE.md §10.5 forbids hard-deleting them. Every read
+     * filters on this being null.
+     */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
@@ -150,6 +157,9 @@ export const assignments = pgTable(
     dueOn: date("due_on").notNull(),
     /** R2 object key, never a URL. */
     attachmentKey: text("attachment_key"),
+    /** Soft delete, as on `assessments` — a mis-posted devoir must be
+     * withdrawable from every family's list without erasing the record. */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),

@@ -53,3 +53,16 @@ export function personName(
     ? `${row.firstNameAr} ${row.lastNameAr}`.trim()
     : `${row.firstNameFr} ${row.lastNameFr}`.trim();
 }
+
+/**
+ * For rows that carry a *joined* subject, named `subjectName*`.
+ *
+ * Marks, absences and homework all arrive with the subject joined on rather
+ * than nested, because one flat row per result is one round trip.
+ */
+export function localizedSubject(
+  row: { subjectNameFr: string; subjectNameAr: string; subjectNameEn: string },
+  locale: Locale | string
+): string {
+  return localized({ fr: row.subjectNameFr, ar: row.subjectNameAr, en: row.subjectNameEn }, locale);
+}

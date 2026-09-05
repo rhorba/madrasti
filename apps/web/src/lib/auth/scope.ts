@@ -1,13 +1,15 @@
 import {
+  assessments,
   classGroups,
   classSubjects,
   db,
   enrolments,
   sessions,
   studentGuardians,
+  subjects,
   timetableSlots,
 } from "@madrasti/db";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { NotAuthorizedError } from "./errors.js";
 import type { AppSession } from "./session.js";
 
@@ -229,4 +231,121 @@ export async function reachableClasses(
     .from(classGroups)
     .innerJoin(enrolments, eq(enrolments.classGroupId, classGroups.id))
     .where(and(isNull(enrolments.leftOn), inArray(enrolments.studentId, studentIds)));
+}
+
+/**
+ * Can this session create assessments or enter marks for this class+subject?
+ *
+ * **Stricter than `assertCanReachClass` on purpose.** A class is taught by a
+ * dozen teachers; reaching the class is enough to see its timetable, and is
+ * nowhere near enough to write marks. Marks belong to one subject, and only
+ * the teacher of *that* subject — or an admin — may touch them. Without this
+ * distinction the maths teacher can rewrite the French marks of a class they
+ * both teach, which is the most plausible internal misuse this system has.
+ */
+export async function assertCanGradeClassSubject(
+  session: AppSession,
+  classSubjectId: string
+): Promise<void> {
+  if (session.role === "admin") return;
+  if (session.role !== "teacher" || !session.teacherId) {
+    throw new NotAuthorizedError(`role ${session.role} -> grade ${classSubjectId}`);
+  }
+
+  const [row] = await db
+    .select({ id: classSubjects.id })
+    .from(classSubjects)
+    .where(
+      and(eq(classSubjects.id, classSubjectId), eq(classSubjects.teacherId, session.teacherId))
+    )
+    .limit(1);
+
+  if (row) return;
+  throw new NotAuthorizedError(`teacher ${session.teacherId} -> grade ${classSubjectId}`);
+}
+
+/**
+ * The same rule, reached through an assessment id.
+ *
+ * Returns the assessment's class+subject so the caller does not have to look
+ * it up a second time — and so there is no window between the check and the
+ * read in which a different id could be used.
+ */
+export async function assertCanGradeAssessment(
+  session: AppSession,
+  assessmentId: string
+): Promise<{ classSubjectId: string; classGroupId: string }> {
+  const [row] = await db
+    .select({
+      classSubjectId: assessments.classSubjectId,
+      classGroupId: classSubjects.classGroupId,
+    })
+    .from(assessments)
+    .innerJoin(classSubjects, eq(classSubjects.id, assessments.classSubjectId))
+    .where(and(eq(assessments.id, assessmentId), isNull(assessments.deletedAt)))
+    .limit(1);
+
+  // A deleted or unknown assessment is refused, not reported as missing: the
+  // caller is holding an id it should not be able to guess anything about.
+  if (!row) throw new NotAuthorizedError(`assessment ${assessmentId} not found`);
+  await assertCanGradeClassSubject(session, row.classSubjectId);
+  return row;
+}
+
+/** One taught subject in one class — the unit every grades screen works in. */
+export type ClassSubjectRef = {
+  id: string;
+  classGroupId: string;
+  className: string;
+  subjectId: string;
+  subjectNameFr: string;
+  subjectNameAr: string;
+  subjectNameEn: string;
+  subjectColor: string;
+  coefficient: string;
+};
+
+/**
+ * Every class+subject this session may open.
+ *
+ * A teacher gets the ones they teach — not every subject of a class they
+ * happen to teach one hour of. A parent or student gets their own class's
+ * subjects, which is their subject list.
+ */
+export async function reachableClassSubjects(session: AppSession): Promise<ClassSubjectRef[]> {
+  const columns = {
+    id: classSubjects.id,
+    classGroupId: classGroups.id,
+    className: classGroups.name,
+    subjectId: subjects.id,
+    subjectNameFr: subjects.nameFr,
+    subjectNameAr: subjects.nameAr,
+    subjectNameEn: subjects.nameEn,
+    subjectColor: subjects.color,
+    coefficient: classSubjects.coefficient,
+  };
+
+  const base = db
+    .select(columns)
+    .from(classSubjects)
+    .innerJoin(classGroups, eq(classGroups.id, classSubjects.classGroupId))
+    .innerJoin(subjects, eq(subjects.id, classSubjects.subjectId))
+    .$dynamic();
+
+  if (session.role === "admin") {
+    return base.orderBy(asc(classGroups.name), asc(subjects.nameFr));
+  }
+
+  if (session.role === "teacher") {
+    if (!session.teacherId) return [];
+    return base
+      .where(eq(classSubjects.teacherId, session.teacherId))
+      .orderBy(asc(classGroups.name), asc(subjects.nameFr));
+  }
+
+  const classIds = (await reachableClasses(session)).map((klass) => klass.id);
+  if (classIds.length === 0) return [];
+  return base
+    .where(inArray(classSubjects.classGroupId, classIds))
+    .orderBy(asc(classGroups.name), asc(subjects.nameFr));
 }

@@ -188,10 +188,19 @@ export const LAST_NAMES = [
 ] as const;
 
 /** Assessment titles, cycled per subject per term. */
+/**
+ * The seed writes the first three of these per subject.
+ *
+ * Ordered deliberately: an oral sits second so it is one of the two that get
+ * marked, which is what puts a /10 assessment into the seeded averages and
+ * makes normalisation visible in the demo rather than only in unit tests. The
+ * devoir surveillé sits third — the one left unmarked — because a heavy
+ * coefficient still to be entered is exactly what a teacher opens the app to do.
+ */
 export const ASSESSMENT_TITLES = [
   { title: "Contrôle continu n°1", type: "controle", coefficient: 1 },
+  { title: "Contrôle oral", type: "oral", coefficient: 1 },
   { title: "Devoir surveillé n°1", type: "devoir_surveille", coefficient: 2 },
-  { title: "Contrôle continu n°2", type: "controle", coefficient: 1 },
   { title: "Participation", type: "participation", coefficient: 1 },
 ] as const;
 

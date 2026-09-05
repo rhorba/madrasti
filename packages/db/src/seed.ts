@@ -617,23 +617,29 @@ async function main(): Promise<void> {
 
   // --- assessments & grades (term 1) -------------------------------------
   const assessmentValues: (typeof s.assessments.$inferInsert)[] = [];
-  const assessmentMeta: { classIdx: number; maxScore: number }[] = [];
+  const assessmentMeta: { classIdx: number; maxScore: number; graded: boolean }[] = [];
 
   for (const cs of classSubjects) {
-    // Three graded assessments per subject so subject averages are meaningful.
+    // Three assessments per subject so subject averages are meaningful.
     for (let a = 0; a < 3; a++) {
       const tpl = at(ASSESSMENT_TITLES, a % ASSESSMENT_TITLES.length, "assessment title");
+      // An oral is marked out of 10 in most Moroccan schools. Keeping one
+      // assessment off /20 means the demo exercises normalisation for real,
+      // not only in the grading package's unit tests.
+      const maxScore = tpl.type === "oral" ? 10 : 20;
       assessmentValues.push({
         classSubjectId: cs.id,
         termId: term1.id,
         title: tpl.title,
         type: tpl.type,
-        maxScore: "20",
+        maxScore: String(maxScore),
         coefficient: String(tpl.coefficient),
         date: iso(addDays(today, -(18 - a * 7))),
         createdBy: adminUser.id,
       });
-      assessmentMeta.push({ classIdx: cs.classIdx, maxScore: 20 });
+      // The most recent one is deliberately left unmarked, exactly as today's
+      // registers are: whoever opens the demo has marks to actually enter.
+      assessmentMeta.push({ classIdx: cs.classIdx, maxScore, graded: a < 2 });
     }
   }
 
@@ -644,7 +650,9 @@ async function main(): Promise<void> {
 
   const gradeValues: (typeof s.grades.$inferInsert)[] = [];
   assessmentRows.forEach((assessment, i) => {
-    const roster = studentsByClass.get(at(assessmentMeta, i, "assessment meta").classIdx) ?? [];
+    const meta = at(assessmentMeta, i, "assessment meta");
+    if (!meta.graded) return;
+    const roster = studentsByClass.get(meta.classIdx) ?? [];
     for (const studentId of roster) {
       // ~4% absent for the assessment. These carry a NULL score and are
       // excluded from averages — they are emphatically not zeros, and the
@@ -656,7 +664,9 @@ async function main(): Promise<void> {
       // (excluded entirely). A dataset with only one of the two lets a wrong
       // implementation pass (`docs/test-strategy-madrasti.md` §3).
       const isZero = !isAbsent && roll < 0.06;
-      const score = isZero ? 0 : 8 + rng() * 10;
+      // Scaled to this assessment's own maximum, so a /10 oral never produces
+      // an 18 that the normalisation would then turn into a 36.
+      const score = isZero ? 0 : meta.maxScore * (0.4 + rng() * 0.5);
       gradeValues.push({
         assessmentId: assessment.id,
         studentId,

@@ -49,6 +49,16 @@ const ALLOWED_IDENTICAL = new Set([
   "absences.title",
   "absences.absent",
   "attendance.statuses.absent",
+  "grades.type",
+  "grades.date",
+  "grades.actions",
+  "grades.absent",
+  "grades.absences",
+  "grades.coefficient",
+  "grades.types.oral",
+  "grades.types.participation",
+  "studentRecord.date",
+  "studentRecord.absences",
 ]);
 
 function flatten(obj, prefix = "", out = new Map()) {

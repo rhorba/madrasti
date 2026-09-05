@@ -70,6 +70,18 @@ export default async function TeacherHome({ params }: { params: Promise<{ locale
                 >
                   {tn("absences")}
                 </Link>
+                <Link
+                  href="/teacher/grades"
+                  className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+                >
+                  {tn("grades")}
+                </Link>
+                <Link
+                  href="/teacher/homework"
+                  className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+                >
+                  {tn("homework")}
+                </Link>
               </span>
             }
           >
@@ -115,6 +127,18 @@ export default async function TeacherHome({ params }: { params: Promise<{ locale
                 className="text-sm text-[var(--action-primary)] underline underline-offset-2"
               >
                 {tn("absences")}
+              </Link>
+              <Link
+                href="/teacher/grades"
+                className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+              >
+                {tn("grades")}
+              </Link>
+              <Link
+                href="/teacher/homework"
+                className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+              >
+                {tn("homework")}
               </Link>
             </span>
           }

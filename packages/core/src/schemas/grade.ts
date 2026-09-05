@@ -26,6 +26,22 @@ export const assessmentSchema = z.object({
 export type AssessmentInput = z.infer<typeof assessmentSchema>;
 
 /**
+ * Editing an assessment.
+ *
+ * The class+subject and the term are deliberately absent: moving an assessment
+ * to another class would carry its marks with it, and moving it to another term
+ * would silently rewrite two bulletins. Those are a delete and a re-create,
+ * which is a decision the teacher should have to make out loud.
+ */
+export const assessmentUpdateSchema = assessmentSchema
+  .omit({ classSubjectId: true, termId: true })
+  .extend({ id: uuidSchema });
+export type AssessmentUpdateInput = z.infer<typeof assessmentUpdateSchema>;
+
+/** Soft-deleting an assessment — see `assessments.deleted_at`. */
+export const assessmentIdSchema = z.object({ id: uuidSchema });
+
+/**
  * One student's mark.
  *
  * **Absent is not zero.** A zero is a mark a student earned; an absence is the
