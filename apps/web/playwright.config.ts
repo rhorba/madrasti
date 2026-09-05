@@ -9,6 +9,11 @@ const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
+  // The walkthrough is a recording, not a test: it drives the *deployed* site
+  // slowly on purpose and publishes a class to film it. Running it here would
+  // add two minutes to CI and write to the suite's shared database for no
+  // assertion. It has its own config.
+  testIgnore: /walkthrough\.spec\.ts/,
   // A known starting state: these tests write to a shared database.
   globalSetup: "./e2e/global-setup.ts",
   fullyParallel: false,
