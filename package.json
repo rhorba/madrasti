@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
-    "start": "pnpm db:migrate && pnpm --filter web start",
+    "start": "pnpm db:migrate && pnpm db:seed && pnpm --filter web start",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "pnpm -r --if-present typecheck",
