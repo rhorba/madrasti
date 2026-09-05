@@ -11,13 +11,15 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 /**
- * One student, everything a teacher needs before a parent phone call.
+ * One child, for their parent.
  *
- * The body is the same component the family sees (`components/student-record`),
- * so the teacher on the phone and the parent on the other end of it are
- * reading the same figures.
+ * The id comes from the URL, so it is the single most attackable value in the
+ * portal: a parent who edits it is asking for another family's child.
+ * `requireReachableStudent` intersects it with `student_guardians` before a
+ * single row is read, and answers 404 rather than 403 so the response says
+ * nothing about whether that id exists (`docs/security-madrasti.md` §5).
  */
-export default async function TeacherStudentRecordPage({
+export default async function ParentChildPage({
   params,
   searchParams,
 }: {
@@ -28,12 +30,11 @@ export default async function TeacherStudentRecordPage({
   setRequestLocale(locale);
   const { term: requestedTermId } = await searchParams;
 
-  const session = await requirePageSession({ roles: ["teacher", "admin"] });
-  const t = await getTranslations("studentRecord");
+  const session = await requirePageSession({ roles: ["parent"] });
+  const t = await getTranslations("parentHome");
   const currentLocale = await getLocale();
 
-  // From the URL, so authorised before anything is read: a teacher reaches a
-  // student only through a class they actually teach.
+  // Authorised before anything is read.
   await requireReachableStudent(session, id);
 
   const [student, year, currentTerm] = await Promise.all([
@@ -44,36 +45,36 @@ export default async function TeacherStudentRecordPage({
   if (!student || !year) notFound();
 
   const terms = await listTerms(year.id);
+  // A term id from the query string is only ever used if it is one of this
+  // year's, so a nonsense value falls back to the current trimestre rather
+  // than rendering an empty record.
   const term = terms.find((row) => row.id === requestedTermId) ?? currentTerm ?? terms[0];
   if (!term) notFound();
 
   const enrolment = await getStudentEnrolment(id, year.id);
-  if (!enrolment) notFound();
 
   return (
     <RoleShell session={session}>
       <div className="flex flex-col gap-5">
         <PageHeader
           title={personName(student, currentLocale)}
-          description={`${enrolment.className} · ${localizedLabel(term, currentLocale)}${
-            student.massarCode ? ` · ${student.massarCode}` : ""
-          }`}
+          description={`${enrolment?.className ?? "—"} · ${localizedLabel(term, currentLocale)}`}
           action={
             <Link
-              href="/teacher/grades"
+              href="/parent"
               className="text-sm text-[var(--action-primary)] underline underline-offset-2"
             >
-              {t("backToGrades")}
+              {t("backToChildren")}
             </Link>
           }
         />
 
         <StudentRecord
           studentId={id}
-          classGroupId={enrolment.classGroupId}
+          classGroupId={enrolment?.classGroupId ?? null}
           term={term}
           terms={terms}
-          termHref={(termId) => `/teacher/students/${id}?term=${termId}`}
+          termHref={(termId) => `/parent/children/${id}?term=${termId}`}
         />
       </div>
     </RoleShell>

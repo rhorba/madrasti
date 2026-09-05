@@ -216,8 +216,18 @@ export async function getClassAbsenceTotals(
     .orderBy(asc(students.lastNameFr), asc(students.firstNameFr));
 }
 
-/** A single student's absence history, most recent first. */
-export async function getStudentAbsences(studentId: string, limit = 100) {
+/**
+ * A single student's absence history, most recent first.
+ *
+ * Optionally bounded to a term. The bound is applied to `sessions.date` — the
+ * date the lesson was actually held — never to when the mark was recorded: a
+ * register corrected in January is still a December absence.
+ */
+export async function getStudentAbsences(
+  studentId: string,
+  limit = 100,
+  within?: { from: string; to: string }
+) {
   return db
     .select({
       id: attendance.id,
@@ -238,7 +248,8 @@ export async function getStudentAbsences(studentId: string, limit = 100) {
       and(
         eq(attendance.studentId, studentId),
         // Only the exceptions: a list of "present" is not an absence record.
-        sql`${attendance.status} <> 'present'`
+        sql`${attendance.status} <> 'present'`,
+        ...(within ? [gte(sessions.date, within.from), lte(sessions.date, within.to)] : [])
       )
     )
     .orderBy(sql`${sessions.date} desc`, asc(timetableSlots.startTime))

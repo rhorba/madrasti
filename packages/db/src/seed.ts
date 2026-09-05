@@ -396,19 +396,51 @@ async function main(): Promise<void> {
     }
   }
 
+  // Families with two children at the school, which is common and which the
+  // portal is shaped around — the parent home is a list of cards. Without a
+  // single sibling in the fixture every guardian has exactly one child, that
+  // list is always one long, and nothing ever exercises the multi-child case:
+  // the same trap as the seed that carried three of four assessment types
+  // (`.logs/issues.md`, 2026-09-05). The pairs are chosen in different classes
+  // because siblings are in different years.
+  const siblingPairs: readonly (readonly [number, number])[] = [
+    [0, 92],
+    [4, 115],
+    [8, 140],
+  ];
+  /** younger student index -> elder student index they share a parent with */
+  const siblingOf = new Map<number, number>();
+  for (const [elder, younger] of siblingPairs) {
+    if (elder >= studentValues.length || younger >= studentValues.length) continue;
+    const elderMeta = at(studentMeta, elder, "sibling elder");
+    // The younger takes the family name, in both scripts.
+    const youngerValue = at(studentValues, younger, "sibling younger");
+    youngerValue.lastNameFr = elderMeta.last[0];
+    youngerValue.lastNameAr = elderMeta.last[1];
+    at(studentMeta, younger, "sibling younger").last = elderMeta.last;
+    siblingOf.set(younger, elder);
+  }
+
   const studentRows = await db.insert(s.students).values(studentValues).returning();
 
-  // Guardians: one per student, and every fourth gets a login so the parent
+  // Guardians: one per family, and every fourth gets a login so the parent
   // portal has something to demonstrate.
   const guardianValues: (typeof s.guardians.$inferInsert)[] = [];
   const guardianUserValues: (typeof s.users.$inferInsert)[] = [];
   const guardianWantsLogin: boolean[] = [];
+  /** student index -> index into `guardianValues`. Siblings share an entry. */
+  const guardianForStudent: number[] = new Array(studentRows.length).fill(-1);
 
   for (let i = 0; i < studentRows.length; i++) {
+    // A younger sibling gets no guardian of their own; they are attached to
+    // the one already created for the elder, below.
+    if (siblingOf.has(i)) continue;
+
     const meta = at(studentMeta, i, "student meta");
     const male = rng() < 0.5;
     const first = male ? pick(MALE_FIRST_NAMES) : pick(FEMALE_FIRST_NAMES);
-    const wantsLogin = i % 4 === 0;
+    // Every parent of two children gets a login, so the demo always has one.
+    const wantsLogin = i % 4 === 0 || siblingPairs.some(([elder]) => elder === i);
     guardianWantsLogin.push(wantsLogin);
     if (wantsLogin) {
       guardianUserValues.push({
@@ -419,6 +451,7 @@ async function main(): Promise<void> {
         mustChangePassword: false,
       });
     }
+    guardianForStudent[i] = guardianValues.length;
     guardianValues.push({
       firstNameFr: first[0],
       firstNameAr: first[1],
@@ -427,6 +460,10 @@ async function main(): Promise<void> {
       phone: `+2126${randInt(10_000_000, 99_999_999)}`,
       relation: male ? "father" : "mother",
     });
+  }
+
+  for (const [younger, elder] of siblingOf) {
+    guardianForStudent[younger] = at(guardianForStudent, elder, "sibling guardian");
   }
 
   const guardianUsers = await db.insert(s.users).values(guardianUserValues).returning();
@@ -442,7 +479,7 @@ async function main(): Promise<void> {
   await db.insert(s.studentGuardians).values(
     studentRows.map((st, i) => ({
       studentId: st.id,
-      guardianId: at(guardianRows, i, "guardian").id,
+      guardianId: at(guardianRows, at(guardianForStudent, i, "guardian index"), "guardian").id,
       isPrimary: true,
     }))
   );

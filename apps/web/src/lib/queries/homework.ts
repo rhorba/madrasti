@@ -103,8 +103,17 @@ export async function listUpcomingHomework(
     .orderBy(asc(assignments.dueOn), asc(subjects.nameFr));
 }
 
-/** Homework set for one student's class, most recently due first. */
-export async function listStudentHomework(studentId: string, limit = 20) {
+/**
+ * Homework set for one student's class, most recently due first.
+ *
+ * Optionally bounded to a term, by the date the work was set. A record screen
+ * showing a trimestre must not spill last trimestre's devoirs into it.
+ */
+export async function listStudentHomework(
+  studentId: string,
+  limit = 20,
+  within?: { from: string; to: string }
+) {
   const classIds = await db
     .select({ id: enrolments.classGroupId })
     .from(enrolments)
@@ -119,7 +128,10 @@ export async function listStudentHomework(studentId: string, limit = 20) {
           classSubjects.classGroupId,
           classIds.map((row) => row.id)
         ),
-        isNull(assignments.deletedAt)
+        isNull(assignments.deletedAt),
+        ...(within
+          ? [gte(assignments.assignedOn, within.from), lte(assignments.assignedOn, within.to)]
+          : [])
       )
     )
     .orderBy(desc(assignments.dueOn))

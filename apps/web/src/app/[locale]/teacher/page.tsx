@@ -6,8 +6,8 @@ import { requirePageSession } from "@/lib/auth/page-session";
 import { cn } from "@/lib/cn";
 import { localizedName } from "@/lib/localized";
 import { listTeacherDay } from "@/lib/queries/attendance";
-import { SCHOOL_TIMEZONE } from "@madrasti/core";
-import { currentAndNext, parseTime, weekdayOf } from "@madrasti/timetable";
+import { schoolNow } from "@/lib/school-time";
+import { currentAndNext, weekdayOf } from "@madrasti/timetable";
 import { CalendarDays, Check } from "lucide-react";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -18,20 +18,6 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
  * lessons with the current one promoted and carrying the primary action, so
  * login → register is two taps (`docs/ux-madrasti.md` §5).
  */
-
-/** Today, and the minute of it, in the school's timezone rather than the server's. */
-function schoolNow(): { date: string; minutes: number } {
-  const now = new Date();
-  const date = new Intl.DateTimeFormat("en-CA", { timeZone: SCHOOL_TIMEZONE }).format(now);
-  const time = new Intl.DateTimeFormat("en-GB", {
-    timeZone: SCHOOL_TIMEZONE,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(now);
-  return { date, minutes: parseTime(time) };
-}
-
 export default async function TeacherHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);

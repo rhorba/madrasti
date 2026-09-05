@@ -3,20 +3,20 @@ import { PageHeader } from "@/components/page-header";
 import { RoleShell } from "@/components/role-shell";
 import { TimetableGrid } from "@/components/timetable-grid";
 import { Link } from "@/i18n/navigation";
+import { requireReachableStudent } from "@/lib/auth/page-scope";
 import { requirePageSession } from "@/lib/auth/page-session";
-import { assertCanReachStudent, reachableStudentIds } from "@/lib/auth/scope";
+import { reachableStudentIds } from "@/lib/auth/scope";
 import { personName } from "@/lib/localized";
+import { listChildren } from "@/lib/queries/family";
 import { listClassTimetable } from "@/lib/queries/timetable";
-import { classGroups, db, enrolments, students } from "@madrasti/db";
-import { and, eq, inArray, isNull } from "drizzle-orm";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 
 /**
  * A parent's view of a child's class timetable.
  *
  * The child is chosen from a query parameter, so it is checked against the
- * parent's own children before anything is read — `assertCanReachStudent`
- * throws rather than returning an empty grid.
+ * parent's own children before anything is read — a refused id is a 404, not
+ * an empty grid that would look like a school with no lessons.
  */
 export default async function ParentTimetablePage({
   params,
@@ -31,36 +31,26 @@ export default async function ParentTimetablePage({
 
   const session = await requirePageSession({ roles: ["parent"] });
   const t = await getTranslations("timetable");
+  const tp = await getTranslations("parentHome");
   const currentLocale = await getLocale();
 
   const childIds = await reachableStudentIds(session);
-  if (childIds.length === 0) {
+  const children = await listChildren(childIds);
+
+  if (children.length === 0) {
     return (
       <RoleShell session={session}>
-        <PageHeader title={t("myTimetable")} />
-        <EmptyState>{t("noChildren")}</EmptyState>
+        <div className="flex flex-col gap-4">
+          <PageHeader title={t("myTimetable")} />
+          <EmptyState>{t("noChildren")}</EmptyState>
+        </div>
       </RoleShell>
     );
   }
 
-  const children = await db
-    .select({
-      id: students.id,
-      firstNameFr: students.firstNameFr,
-      lastNameFr: students.lastNameFr,
-      firstNameAr: students.firstNameAr,
-      lastNameAr: students.lastNameAr,
-      classGroupId: classGroups.id,
-      className: classGroups.name,
-    })
-    .from(students)
-    .leftJoin(enrolments, and(eq(enrolments.studentId, students.id), isNull(enrolments.leftOn)))
-    .leftJoin(classGroups, eq(classGroups.id, enrolments.classGroupId))
-    .where(inArray(students.id, childIds));
-
   // A supplied id is authorised before use; otherwise fall back to the first
   // child rather than trusting the parameter.
-  if (requestedStudentId) await assertCanReachStudent(session, requestedStudentId);
+  if (requestedStudentId) await requireReachableStudent(session, requestedStudentId);
   const active = children.find((child) => child.id === requestedStudentId) ?? children[0];
 
   const entries = active?.classGroupId ? await listClassTimetable(active.classGroupId) : [];
@@ -72,6 +62,14 @@ export default async function ParentTimetablePage({
           title={t("myTimetable")}
           description={
             active ? `${personName(active, currentLocale)} · ${active.className ?? ""}` : undefined
+          }
+          action={
+            <Link
+              href="/parent"
+              className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+            >
+              {tp("backToChildren")}
+            </Link>
           }
         />
 

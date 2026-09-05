@@ -67,18 +67,6 @@
     "passwordUpdated": "تم تحديث كلمة المرور.",
     "passwordHint": "على الأقل {min} حروف."
   },
-  "home": {
-    "welcome": "مرحبًا {name}",
-    "adminTitle": "لوحة القيادة",
-    "adminEmpty": "ستظهر هنا إعدادات المؤسسة.",
-    "teacherTitle": "حصص اليوم",
-    "teacherEmpty": "ستظهر هنا حصصك لهذا اليوم.",
-    "parentTitle": "أبنائي",
-    "parentEmpty": "ستظهر هنا معلومات أبنائك.",
-    "studentTitle": "فضائي",
-    "studentEmpty": "ستظهر هنا واجباتك ونقطك.",
-    "comingSoon": "قريبًا"
-  },
   "errors": {
     "required": "هذا الحقل إجباري.",
     "invalidId": "معرّف غير صالح.",
@@ -476,7 +464,10 @@
       "absent": "غائب",
       "late": "متأخر",
       "excused": "بعذر"
-    }
+    },
+    "absentTotal": "{count} غياب",
+    "lateTotal": "{count} تأخر",
+    "excusedTotal": "{count} بعذر"
   },
   "absences": {
     "title": "الغيابات",
@@ -576,6 +567,34 @@
     "date": "التاريخ",
     "status": "الحالة",
     "homework": "آخر الواجبات",
-    "noHomework": "لا يوجد واجب مسجل."
+    "noHomework": "لا يوجد واجب مسجل.",
+    "chooseTerm": "اختيار الدورة",
+    "noMarks": "لا توجد نقط في هذه الدورة."
+  },
+  "parentHome": {
+    "title": "أبنائي",
+    "noChildren": "لا يوجد أي تلميذ مرتبط بحسابكم. يرجى الاتصال بالمدرسة.",
+    "timetable": "جدول الحصص",
+    "todayLabel": "اليوم",
+    "nextHomework": "الواجب القادم",
+    "lastMark": "آخر نقطة",
+    "noHomework": "لا يوجد واجب قادم.",
+    "noMark": "لا توجد نقطة بعد.",
+    "markAbsent": "غائب",
+    "presentToday": "حاضر · {count} حصة",
+    "noRegisterYet": "لم يتم أخذ الغياب اليوم بعد.",
+    "seeRecord": "عرض الملف",
+    "backToChildren": "العودة إلى أبنائي"
+  },
+  "studentHome": {
+    "title": "مساحتي",
+    "notLinked": "حسابكم غير مرتبط بأي تلميذ. يرجى الاتصال بالمدرسة.",
+    "timetable": "جدول الحصص",
+    "myRecord": "ملفي",
+    "backHome": "العودة إلى مساحتي",
+    "todayLabel": "اليوم",
+    "homework": "الواجبات القادمة",
+    "noHomework": "لا يوجد واجب قادم.",
+    "lastMark": "آخر نقطة"
   }
 }

@@ -67,18 +67,6 @@
     "passwordUpdated": "Mot de passe mis à jour.",
     "passwordHint": "Au moins {min} caractères."
   },
-  "home": {
-    "welcome": "Bonjour {name}",
-    "adminTitle": "Tableau de bord",
-    "adminEmpty": "La configuration de l'école apparaîtra ici.",
-    "teacherTitle": "Mes cours d'aujourd'hui",
-    "teacherEmpty": "Vos séances du jour apparaîtront ici.",
-    "parentTitle": "Mes enfants",
-    "parentEmpty": "Les informations de vos enfants apparaîtront ici.",
-    "studentTitle": "Mon espace",
-    "studentEmpty": "Vos devoirs et vos notes apparaîtront ici.",
-    "comingSoon": "Bientôt disponible"
-  },
   "errors": {
     "required": "Ce champ est obligatoire.",
     "invalidId": "Identifiant invalide.",
@@ -476,7 +464,10 @@
       "absent": "Absent",
       "late": "Retard",
       "excused": "Excusé"
-    }
+    },
+    "absentTotal": "{count} absence(s)",
+    "lateTotal": "{count} retard(s)",
+    "excusedTotal": "{count} excusée(s)"
   },
   "absences": {
     "title": "Absences",
@@ -576,6 +567,34 @@
     "date": "Date",
     "status": "Statut",
     "homework": "Derniers devoirs",
-    "noHomework": "Aucun devoir enregistré."
+    "noHomework": "Aucun devoir enregistré.",
+    "chooseTerm": "Choisir un trimestre",
+    "noMarks": "Aucune note pour ce trimestre."
+  },
+  "parentHome": {
+    "title": "Mes enfants",
+    "noChildren": "Aucun enfant n'est rattaché à votre compte. Contactez l'école.",
+    "timetable": "Emploi du temps",
+    "todayLabel": "Aujourd'hui",
+    "nextHomework": "Prochain devoir",
+    "lastMark": "Dernière note",
+    "noHomework": "Aucun devoir à venir.",
+    "noMark": "Aucune note pour le moment.",
+    "markAbsent": "Absent",
+    "presentToday": "Présent · {count} séance(s)",
+    "noRegisterYet": "Appel pas encore fait aujourd'hui.",
+    "seeRecord": "Voir le dossier",
+    "backToChildren": "Retour à mes enfants"
+  },
+  "studentHome": {
+    "title": "Mon espace",
+    "notLinked": "Votre compte n'est rattaché à aucun élève. Contactez l'école.",
+    "timetable": "Emploi du temps",
+    "myRecord": "Mon dossier",
+    "backHome": "Retour à mon espace",
+    "todayLabel": "Aujourd'hui",
+    "homework": "Devoirs à venir",
+    "noHomework": "Aucun devoir à venir.",
+    "lastMark": "Dernière note"
   }
 }

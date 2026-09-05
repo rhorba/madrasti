@@ -67,18 +67,6 @@
     "passwordUpdated": "Password updated.",
     "passwordHint": "At least {min} characters."
   },
-  "home": {
-    "welcome": "Hello {name}",
-    "adminTitle": "Dashboard",
-    "adminEmpty": "The school's setup will appear here.",
-    "teacherTitle": "Today's lessons",
-    "teacherEmpty": "Your sessions for today will appear here.",
-    "parentTitle": "My children",
-    "parentEmpty": "Your children's information will appear here.",
-    "studentTitle": "My space",
-    "studentEmpty": "Your homework and grades will appear here.",
-    "comingSoon": "Coming soon"
-  },
   "errors": {
     "required": "This field is required.",
     "invalidId": "Invalid identifier.",
@@ -476,7 +464,10 @@
       "absent": "Absent",
       "late": "Late",
       "excused": "Excused"
-    }
+    },
+    "absentTotal": "{count} absence(s)",
+    "lateTotal": "{count} late",
+    "excusedTotal": "{count} excused"
   },
   "absences": {
     "title": "Absences",
@@ -576,6 +567,34 @@
     "date": "Date",
     "status": "Status",
     "homework": "Recent homework",
-    "noHomework": "No homework recorded."
+    "noHomework": "No homework recorded.",
+    "chooseTerm": "Choose a term",
+    "noMarks": "No marks for this term."
+  },
+  "parentHome": {
+    "title": "My children",
+    "noChildren": "No child is linked to your account. Please contact the school.",
+    "timetable": "Timetable",
+    "todayLabel": "Today",
+    "nextHomework": "Next homework",
+    "lastMark": "Latest mark",
+    "noHomework": "No homework coming up.",
+    "noMark": "No mark yet.",
+    "markAbsent": "Absent",
+    "presentToday": "Present · {count} lesson(s)",
+    "noRegisterYet": "The register has not been taken today.",
+    "seeRecord": "See the record",
+    "backToChildren": "Back to my children"
+  },
+  "studentHome": {
+    "title": "My space",
+    "notLinked": "Your account is not linked to a student. Please contact the school.",
+    "timetable": "Timetable",
+    "myRecord": "My record",
+    "backHome": "Back to my space",
+    "todayLabel": "Today",
+    "homework": "Upcoming homework",
+    "noHomework": "No homework coming up.",
+    "lastMark": "Latest mark"
   }
 }
