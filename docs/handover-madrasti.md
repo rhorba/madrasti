@@ -63,8 +63,8 @@ restart.
 | `NEXT_PUBLIC_APP_URL` | `https://${{RAILWAY_PUBLIC_DOMAIN}}` |
 | `NODE_ENV` | `production` |
 
-`R2_*` is **not set**. Homework attachments and student photos are therefore
-disabled; everything else works. Set them when the school wants attachments.
+`R2_*` **is set**, so homework attachments and student photos work. The bucket
+is private and is also where database backups go, under `backups/`.
 
 ---
 
@@ -122,7 +122,7 @@ This is the list from `docs/security-madrasti.md` §10, with its current state.
 | ✅ | Security headers on the deployed origin | CSP, HSTS preload, `frame-ancestors 'none'`, nosniff, `X-Frame-Options: DENY` |
 | ✅ | `pnpm audit` clean of high/critical | clean |
 | ❌ | **No seeded credentials reachable in production** | **the demo accounts in §2 are live** |
-| ❌ | Backups encrypted, off-vendor, **and a restore performed** | not done |
+| ⚠️ | Backups encrypted, off-vendor, **and a restore performed** | restore proven; **not yet scheduled** |
 | ❌ | Log output inspected for personal data after a full journey | not done |
 | ❌ | File objects confirmed non-public by direct URL | N/A until `R2_*` is set |
 | ❌ | Loi 09-08 / CNDP obligation acknowledged in writing | **the school's to do** |
@@ -150,17 +150,18 @@ bugs with seed data.
 
 ## 8. Known limitations
 
-- **Attachments are off** until `R2_*` is configured.
+- **Backups are not scheduled.** `node scripts/backup.mjs to-r2` dumps the
+  database and pushes it to Cloudflare R2 — off-vendor, which is the
+  requirement — and the restore path is proven end to end (dump, restore into a
+  scratch database, count: 69 users, 184 students, 3680 grades, Arabic names
+  intact). But nothing *runs* it on a schedule yet. It has to run somewhere that
+  can reach `postgres.railway.internal`, which means inside Railway.
 - **Rate limiting is in-process**, so it is per-instance. Correct for one
   service; move it to shared storage before scaling to two.
 - **Password reset is admin-initiated.** There is no self-service email reset,
   because many parents will not have an email address they check.
-- **French ordinals** print "1e" where the top of the class should read "1er" —
-  shared between the review screen and the bulletin, so it wants one fix in both.
-- **`railway.json` is deprecated** by Railway and stops working 2026-12-01. The
-  migration to `.railway/railway.ts` was attempted and blocked by a version
-  standoff between the CLI and its IaC SDK; migrations were moved into
-  `pnpm start` instead, which is why nothing currently depends on it.
+- **Railway SSH is registered but host-key verification fails**, so one-off
+  commands against production still have to go through the start command.
 
 ---
 
