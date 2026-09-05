@@ -619,7 +619,9 @@
     "decision": "Decision",
     "signatureHead": "The Head Teacher",
     "signatureGuardian": "Parent or guardian signature",
-    "publishedOn": "Issued on {date}"
+    "publishedOn": "Issued on {date}",
+    "noneForFamily": "No report card has been published yet. The school puts them online at the end of each term.",
+    "chooseTerm": "Choose a term"
   },
   "homework": {
     "title": "Homework",
@@ -673,7 +675,9 @@
     "presentToday": "Present · {count} lesson(s)",
     "noRegisterYet": "The register has not been taken today.",
     "seeRecord": "See the record",
-    "backToChildren": "Back to my children"
+    "backToChildren": "Back to my children",
+    "bulletin": "Report card",
+    "backToChild": "Back to the record"
   },
   "studentHome": {
     "title": "My space",
@@ -684,6 +688,7 @@
     "todayLabel": "Today",
     "homework": "Upcoming homework",
     "noHomework": "No homework coming up.",
-    "lastMark": "Latest mark"
+    "lastMark": "Latest mark",
+    "myBulletin": "My report card"
   }
 }

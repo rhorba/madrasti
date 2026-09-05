@@ -246,3 +246,234 @@ test.describe("trilingual", () => {
     }
   });
 });
+
+/**
+ * Story 8.5 — the family's own bulletin.
+ *
+ * The seed lines this up better than a fixture could: `parent0` has two
+ * children, Reda in CE1 A and Chaimae in CM2 A, and `eleve1` is Reda. CE1 A is
+ * the first class on the admin's list and so the one that gets published here.
+ * That means one parent sees, on the same portal, a real published bulletin for
+ * one child and an honest "not published yet" for the other — which is the
+ * state most families will actually be in for most of the year, and the one a
+ * fixture where everything is published would never show.
+ *
+ * The overlap is asserted rather than assumed, so a change to the seed fails
+ * these tests loudly instead of quietly making them prove nothing.
+ */
+
+/**
+ * Publish the first class as the admin, in a context of its own.
+ *
+ * Its own browser context because the point of these tests is that the
+ * family's own cookie carries them into their own bulletin — borrowing the
+ * admin's session to set the fixture up would undo that.
+ *
+ * Returns the withdrawal, which every caller must run: publication freezes a
+ * class's term, and a suite that left one published would fail later runs with
+ * an error about bulletins that reads as a product bug and is not one.
+ */
+async function publishFirstClass(browser: Browser): Promise<() => Promise<void>> {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  await signIn(page, ADMIN, "admin");
+  await page.goto("/fr/admin/bulletins");
+  await page.getByRole("button", { name: "Publier les bulletins" }).click();
+  await expect(page.getByText("Bulletins publiés.", { exact: false })).toBeVisible();
+
+  return async () => {
+    try {
+      await page.goto("/fr/admin/bulletins");
+      await page.getByRole("button", { name: "Dépublier", exact: true }).click();
+      await page.getByLabel(/motif de la dépublication/i).fill("Fin du test end-to-end.");
+      await page.getByRole("button", { name: "Oui, dépublier" }).click();
+      await expect(page.getByText("Bulletins dépubliés.", { exact: false })).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  };
+}
+
+test.describe("a family reads its own bulletin", () => {
+  test("a parent opens the published bulletin of the child who has one", async ({
+    page,
+    browser,
+  }) => {
+    const withdraw = await publishFirstClass(browser);
+    try {
+      await signIn(page, PARENT, "parent");
+      await page.getByRole("link", { name: "Reda Rami" }).first().click();
+      await page.waitForURL(/\/parent\/children\/[0-9a-f-]{36}/);
+      await page.getByRole("link", { name: "Bulletin" }).click();
+      await page.waitForURL(/\/bulletin/);
+
+      // The same document the school printed, from the same component — not a
+      // family-friendly summary that could drift away from the paper copy.
+      const sheet = page.getByRole("article", { name: "Bulletin scolaire" });
+      await expect(sheet).toHaveCount(1);
+      await expect(sheet.getByText("Groupe Scolaire Al Massira")).toBeVisible();
+      await expect(sheet.getByRole("columnheader", { name: "Matière" })).toBeVisible();
+      await expect(sheet.getByText("Le Directeur")).toBeVisible();
+      await expect(sheet.getByText(/^\d{1,2},\d{2}$/).first()).toBeVisible();
+
+      // A family prints or saves its own copy from the same button the office
+      // uses.
+      await expect(page.getByRole("button", { name: "Imprimer" })).toBeVisible();
+
+      // The three figures a parent came for, above the document and readable
+      // on a phone without scrolling the sheet sideways. The sheet keeps its
+      // A4 width, which is right for a document and wrong as the only way to
+      // learn an average.
+      await page.setViewportSize({ width: 360, height: 740 });
+      const headline = page.locator("dl[data-print=hide]");
+      await expect(headline).toBeVisible();
+      await expect(headline.getByText(/^\d{1,2},\d{2} \/ 20$/)).toBeVisible();
+      await expect(headline.getByText(/^\de sur \d+$/)).toBeVisible();
+      await page.setViewportSize({ width: 1280, height: 800 });
+    } finally {
+      await withdraw();
+    }
+  });
+
+  test("the same parent is told plainly that the other child has none yet", async ({
+    page,
+    browser,
+  }) => {
+    // Chaimae is in CM2 A, which was not published. This is the state most
+    // families are in for most of the year, and it must read as "not yet",
+    // never as an error and never as a draft.
+    const withdraw = await publishFirstClass(browser);
+    try {
+      await signIn(page, PARENT, "parent");
+      await page.getByRole("link", { name: "Chaimae Rami" }).first().click();
+      await page.waitForURL(/\/parent\/children\/[0-9a-f-]{36}/);
+      await page.getByRole("link", { name: "Bulletin" }).click();
+
+      await expect(page.getByText(/Aucun bulletin n'a encore été publié/)).toBeVisible();
+      await expect(page.getByRole("article", { name: "Bulletin scolaire" })).toHaveCount(0);
+    } finally {
+      await withdraw();
+    }
+  });
+
+  test("a student opens their own, with no id in the URL to change", async ({ page, browser }) => {
+    const withdraw = await publishFirstClass(browser);
+    try {
+      await signIn(page, STUDENT, "student");
+      await page.getByRole("link", { name: "Mon bulletin" }).click();
+      await page.waitForURL(/\/student\/bulletin/);
+
+      const sheet = page.getByRole("article", { name: "Bulletin scolaire" });
+      await expect(sheet).toHaveCount(1);
+      await expect(sheet.getByText("Reda Rami")).toBeVisible();
+      // The whole route carries no student id at all.
+      expect(page.url()).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}/);
+    } finally {
+      await withdraw();
+    }
+  });
+
+  test("withdrawing a bulletin takes it back from the family too", async ({ page, browser }) => {
+    // The other half of story 8.3's unpublish, seen from where it matters. The
+    // school withdrew the document; the family must stop being shown it.
+    const withdraw = await publishFirstClass(browser);
+    await signIn(page, STUDENT, "student");
+    await page.goto("/fr/student/bulletin");
+    await expect(page.getByRole("article", { name: "Bulletin scolaire" })).toHaveCount(1);
+
+    await withdraw();
+
+    await page.goto("/fr/student/bulletin");
+    await expect(page.getByRole("article", { name: "Bulletin scolaire" })).toHaveCount(0);
+    await expect(page.getByText(/Aucun bulletin n'a encore été publié/)).toBeVisible();
+  });
+});
+
+test.describe("a family cannot reach another family's bulletin", () => {
+  test("a parent is refused another child's bulletin by id, with a 404", async ({
+    page,
+    browser,
+  }) => {
+    // The most sensitive document this product holds about a named minor, on
+    // the most attackable value on the page. `docs/security-madrasti.md` §5:
+    // 404 rather than 403, so walking ids tells the walker nothing.
+    const withdraw = await publishFirstClass(browser);
+    try {
+      await signIn(page, PARENT, "parent");
+      const mine = await ownChildIds(page);
+      const theirs = await foreignStudentId(browser, mine);
+
+      const response = await page.goto(`/fr/parent/children/${theirs}/bulletin`);
+      expect(response?.status()).toBe(404);
+
+      const body = await page.locator("body").innerText();
+      expect(body).not.toContain("Moyenne générale");
+      expect(body).not.toContain("Groupe Scolaire Al Massira");
+    } finally {
+      await withdraw();
+    }
+  });
+
+  test("and gets the same answer for an id that was never issued", async ({ page }) => {
+    await signIn(page, PARENT, "parent");
+    const response = await page.goto(
+      "/fr/parent/children/00000000-0000-0000-0000-000000000000/bulletin"
+    );
+    expect(response?.status()).toBe(404);
+  });
+
+  test("a student cannot reach a classmate's bulletin", async ({ page, browser }) => {
+    await signIn(page, STUDENT, "student");
+    const theirs = await foreignStudentId(browser, []);
+
+    // There is no student-facing route that takes an id, so the attempt has to
+    // borrow the parent's — refused for the role before the id is even read.
+    await page.goto(`/fr/parent/children/${theirs}/bulletin`);
+    await expect(page).toHaveURL(/\/fr\/student$/);
+  });
+});
+
+test.describe("the family bulletin is trilingual", () => {
+  test("is really Arabic, mirrored, and in Moroccan digits", async ({ page, browser }) => {
+    const withdraw = await publishFirstClass(browser);
+    try {
+      await signIn(page, STUDENT, "student", "ar");
+      await page.goto("/ar/student/bulletin");
+
+      await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+      const sheet = page.getByRole("article", { name: "كشف النقط" });
+      await expect(sheet).toHaveCount(1);
+      await expect(sheet.getByRole("columnheader", { name: "المادة" })).toBeVisible();
+      await expect(sheet.getByText("مجموعة مدارس المسيرة")).toBeVisible();
+
+      // The same rule as the printed sheet: Morocco writes marks in Western
+      // digits, and a family screen must not disagree with the paper copy.
+      const printed = (await sheet.textContent()) ?? "";
+      expect(printed, "Eastern Arabic-Indic digits on a Moroccan bulletin").not.toMatch(/[٠-٩]/);
+    } finally {
+      await withdraw();
+    }
+  });
+
+  test("fits a 360px phone in every language", async ({ page, browser }) => {
+    const withdraw = await publishFirstClass(browser);
+    try {
+      await signIn(page, STUDENT, "student");
+      await page.setViewportSize({ width: 360, height: 740 });
+      for (const locale of ["ar", "fr", "en"]) {
+        await page.goto(`/${locale}/student/bulletin`);
+        await expect(
+          page.getByRole("article", { name: /Bulletin scolaire|كشف النقط|Report card/ })
+        ).toHaveCount(1);
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+        );
+        expect(overflow, `${locale} family bulletin overflows at 360px`).toBe(false);
+      }
+    } finally {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await withdraw();
+    }
+  });
+});

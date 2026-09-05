@@ -619,7 +619,9 @@
     "decision": "القرار",
     "signatureHead": "المدير",
     "signatureGuardian": "توقيع ولي الأمر",
-    "publishedOn": "حُرر في {date}"
+    "publishedOn": "حُرر في {date}",
+    "noneForFamily": "لم يُنشر أي كشف نقط بعد. تنشرها المدرسة في نهاية كل أسدس.",
+    "chooseTerm": "اختر الأسدس"
   },
   "homework": {
     "title": "الواجبات",
@@ -673,7 +675,9 @@
     "presentToday": "حاضر · {count} حصة",
     "noRegisterYet": "لم يتم أخذ الغياب اليوم بعد.",
     "seeRecord": "عرض الملف",
-    "backToChildren": "العودة إلى أبنائي"
+    "backToChildren": "العودة إلى أبنائي",
+    "bulletin": "كشف النقط",
+    "backToChild": "العودة إلى البطاقة"
   },
   "studentHome": {
     "title": "مساحتي",
@@ -684,6 +688,7 @@
     "todayLabel": "اليوم",
     "homework": "الواجبات القادمة",
     "noHomework": "لا يوجد واجب قادم.",
-    "lastMark": "آخر نقطة"
+    "lastMark": "آخر نقطة",
+    "myBulletin": "كشف نقطي"
   }
 }

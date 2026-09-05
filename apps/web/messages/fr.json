@@ -619,7 +619,9 @@
     "decision": "Décision",
     "signatureHead": "Le Directeur",
     "signatureGuardian": "Signature du parent ou tuteur",
-    "publishedOn": "Édité le {date}"
+    "publishedOn": "Édité le {date}",
+    "noneForFamily": "Aucun bulletin n'a encore été publié. L'école les met en ligne à la fin de chaque trimestre.",
+    "chooseTerm": "Choisir un trimestre"
   },
   "homework": {
     "title": "Devoirs",
@@ -673,7 +675,9 @@
     "presentToday": "Présent · {count} séance(s)",
     "noRegisterYet": "Appel pas encore fait aujourd'hui.",
     "seeRecord": "Voir le dossier",
-    "backToChildren": "Retour à mes enfants"
+    "backToChildren": "Retour à mes enfants",
+    "bulletin": "Bulletin",
+    "backToChild": "Retour à la fiche"
   },
   "studentHome": {
     "title": "Mon espace",
@@ -684,6 +688,7 @@
     "todayLabel": "Aujourd'hui",
     "homework": "Devoirs à venir",
     "noHomework": "Aucun devoir à venir.",
-    "lastMark": "Dernière note"
+    "lastMark": "Dernière note",
+    "myBulletin": "Mon bulletin"
   }
 }

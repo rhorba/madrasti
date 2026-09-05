@@ -594,3 +594,46 @@ export async function getBulletinContext(classGroupId: string, termId: string) {
 
   return row ?? null;
 }
+
+/** A term for which this student has a published bulletin. */
+export type PublishedTerm = {
+  id: string;
+  labelFr: string;
+  labelAr: string;
+  labelEn: string;
+  order: number;
+  publishedAt: Date;
+};
+
+/**
+ * The terms a family can actually open, newest last.
+ *
+ * A family is offered **only** the terms whose bulletin has been published to
+ * them. Listing all three trimestres and having two of them say "nothing here"
+ * is a screen that invites a parent to wonder whether the school has lost their
+ * child's marks; there is nothing to choose between until the school has
+ * published, so nothing is offered.
+ *
+ * Filtered on `published_at` rather than on the row existing: a draft carries
+ * the council's remark and no figures, and is not a document
+ * (`.logs/decisions.md`, story 8.3).
+ */
+export async function listPublishedTerms(studentId: string): Promise<PublishedTerm[]> {
+  const rows = await db
+    .select({
+      id: terms.id,
+      labelFr: terms.labelFr,
+      labelAr: terms.labelAr,
+      labelEn: terms.labelEn,
+      order: terms.order,
+      publishedAt: bulletins.publishedAt,
+    })
+    .from(bulletins)
+    .innerJoin(terms, eq(terms.id, bulletins.termId))
+    .where(and(eq(bulletins.studentId, studentId), isNotNull(bulletins.publishedAt)))
+    .orderBy(asc(terms.order));
+
+  return rows.flatMap((row) =>
+    row.publishedAt === null ? [] : [{ ...row, publishedAt: row.publishedAt }]
+  );
+}

@@ -1,5 +1,6 @@
 import { BulletinDocument } from "@/components/bulletin-document";
 import { EmptyState } from "@/components/empty-state";
+import { PrintButton } from "@/components/print-button";
 import { Link } from "@/i18n/navigation";
 import { localizedLabel } from "@/lib/localized";
 import {
@@ -11,7 +12,6 @@ import {
 } from "@/lib/queries/academic";
 import { getStoredBulletins } from "@/lib/queries/bulletins";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
-import { PrintButton } from "./print-button";
 
 /**
  * A class's bulletins, ready for the printer.

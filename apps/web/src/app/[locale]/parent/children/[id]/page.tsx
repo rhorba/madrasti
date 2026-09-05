@@ -60,12 +60,23 @@ export default async function ParentChildPage({
           title={personName(student, currentLocale)}
           description={`${enrolment?.className ?? "—"} · ${localizedLabel(term, currentLocale)}`}
           action={
-            <Link
-              href="/parent"
-              className="text-sm text-[var(--action-primary)] underline underline-offset-2"
-            >
-              {t("backToChildren")}
-            </Link>
+            <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {/* The bulletin sits beside the running record it summarises,
+                  rather than on the portal's home page: a parent arrives here
+                  by their child's name, and this is the child's page. */}
+              <Link
+                href={`/parent/children/${id}/bulletin`}
+                className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+              >
+                {t("bulletin")}
+              </Link>
+              <Link
+                href="/parent"
+                className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+              >
+                {t("backToChildren")}
+              </Link>
+            </span>
           }
         />
 

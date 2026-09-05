@@ -81,6 +81,12 @@ export default async function StudentHome({ params }: { params: Promise<{ locale
               >
                 {t("myRecord")}
               </Link>
+              <Link
+                href="/student/bulletin"
+                className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+              >
+                {t("myBulletin")}
+              </Link>
             </span>
           }
         />
