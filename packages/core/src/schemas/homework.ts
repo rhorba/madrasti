@@ -1,9 +1,8 @@
 import { z } from "zod";
 import { ALLOWED_ATTACHMENT_TYPES, MAX_ATTACHMENT_BYTES } from "../constants.js";
-import { BULLETIN_DECISIONS } from "../enums.js";
 import { dateStringSchema, nonEmptyString, uuidSchema } from "./common.js";
 
-/** Homework, and the bulletin actions. */
+/** Homework, and the attachment a devoir can carry. */
 
 export const assignmentSchema = z
   .object({
@@ -65,37 +64,3 @@ export const attachmentRequestSchema = z.object({
     .max(MAX_ATTACHMENT_BYTES, { message: "errors.attachmentTooLarge" }),
 });
 export type AttachmentRequest = z.infer<typeof attachmentRequestSchema>;
-
-export const generateBulletinsSchema = z.object({
-  classGroupId: uuidSchema,
-  termId: uuidSchema,
-});
-
-/**
- * Publication is per class per term, never per student — that is how the school
- * works, and it makes partial publication (some families see marks, others do
- * not) impossible by construction (`docs/system-design-madrasti.md` §3).
- */
-export const publishBulletinsSchema = z.object({
-  classGroupId: uuidSchema,
-  termId: uuidSchema,
-});
-
-/** Unpublishing is deliberately explicit and audited — it un-freezes records. */
-export const unpublishBulletinsSchema = z.object({
-  classGroupId: uuidSchema,
-  termId: uuidSchema,
-  reason: nonEmptyString(300),
-});
-
-export const bulletinAppreciationSchema = z.object({
-  bulletinId: uuidSchema,
-  subjectId: uuidSchema.nullable(),
-  appreciation: z.string().trim().max(500),
-});
-
-export const bulletinDecisionSchema = z.object({
-  bulletinId: uuidSchema,
-  decision: z.enum(BULLETIN_DECISIONS),
-  appreciation: z.string().trim().max(1000).optional(),
-});

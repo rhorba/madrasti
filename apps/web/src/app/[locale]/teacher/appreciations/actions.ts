@@ -3,6 +3,7 @@
 import { defineAction } from "@/lib/action";
 import { assertCanGradeClassSubject } from "@/lib/auth/scope";
 import type { AppSession } from "@/lib/auth/session";
+import { assertTermOpenForClassSubject } from "@/lib/bulletin-freeze";
 import { type SaveAppreciationsInput, saveAppreciationsSchema } from "@madrasti/core";
 import { classSubjects, db, enrolments, subjectAppreciations } from "@madrasti/db";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
@@ -21,6 +22,12 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
  *    judgement about a named minor; copying it into `audit_log` would make a
  *    second, less-protected copy of the most sensitive sentence in the product
  *    (`CLAUDE.md` §11, `docs/security-madrasti.md` §7).
+ *
+ * And the same freeze as the marks: an appreciation prints on the bulletin, so
+ * once that bulletin is published the remark is part of a document the family
+ * holds and stops being editable. It is the same document, so it is the same
+ * rule — a freeze that covered the figures and left the sentences editable
+ * would be a freeze in name only.
  */
 
 /**
@@ -65,6 +72,7 @@ async function saveSheet(input: SaveAppreciationsInput, { session }: { session: 
   await assertCanGradeClassSubject(session, input.classSubjectId);
 
   return db.transaction(async (tx) => {
+    await assertTermOpenForClassSubject(input.classSubjectId, input.termId, tx);
     await assertStudentsBelong(
       tx,
       input.classSubjectId,

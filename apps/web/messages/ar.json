@@ -129,7 +129,10 @@
     "nothingToCopy": "لا توجد حصص لنسخها في ذلك اليوم.",
     "allSlotsConflict": "كل الحصص متعارضة في ذلك اليوم.",
     "appreciationTooLong": "الملاحظة طويلة جداً.",
-    "noAppreciations": "لا توجد ملاحظات للحفظ."
+    "noAppreciations": "لا توجد ملاحظات للحفظ.",
+    "bulletinPublished": "كشوف نقط هذا الأسدس منشورة. على المدير إلغاء نشرها قبل أي تعديل.",
+    "notPublished": "لا توجد كشوف منشورة لهذا القسم وهذا الأسدس.",
+    "noBulletins": "لا توجد كشوف للحفظ."
   },
   "admin": {
     "home": {
@@ -551,6 +554,42 @@
     "retry": "إعادة المحاولة",
     "saved": "تم حفظ الملاحظات.",
     "textKept": "تم الاحتفاظ بما كتبته."
+  },
+  "bulletins": {
+    "title": "كشوف النقط",
+    "needYear": "لا توجد سنة دراسية جارية.",
+    "needClasses": "لا يوجد قسم أو أسدس لهذه السنة.",
+    "noStudents": "لا يوجد تلاميذ في هذا القسم.",
+    "chooseClass": "اختر قسماً",
+    "chooseTerm": "اختر الأسدس",
+    "average": "المعدل العام",
+    "rankOf": "الرتبة {rank} من {of}",
+    "absences": "{count} غياب",
+    "appreciationFor": "الملاحظة العامة بخصوص {name}",
+    "appreciationPlaceholder": "أسدس مرضٍ بشكل عام.",
+    "decisionFor": "قرار المجلس بخصوص {name}",
+    "noDecision": "بدون قرار",
+    "decisions": {
+      "admis": "ناجح",
+      "admis_avec_felicitations": "ناجح مع التهاني",
+      "encouragements": "تشجيعات",
+      "avertissement": "إنذار",
+      "redouble": "يعيد السنة"
+    },
+    "tooLong": "زيادة {over} حرفاً — الحد الأقصى {max}.",
+    "toPublish": "{count} كشف للنشر",
+    "saveDraft": "حفظ المسودة",
+    "publish": "نشر كشوف النقط",
+    "reviewSaved": "تم حفظ المسودة.",
+    "publishedNotice": "تم نشر كشوف النقط. أصبحت متاحة للأسر.",
+    "publishedOn": "نُشرت في {date}.",
+    "publishedExplainer": "نقط وملاحظات هذا الأسدس مجمّدة لهذا القسم. هذه هي الوثيقة التي تراها الأسر.",
+    "frozen": "هذا الأسدس مجمّد لهذا القسم.",
+    "unpublish": "إلغاء النشر",
+    "unpublishReason": "سبب إلغاء النشر (يُحفظ في السجل)",
+    "confirmUnpublish": "نعم، ألغِ النشر",
+    "cancel": "إلغاء",
+    "unpublished": "تم إلغاء النشر. أصبحت النقط قابلة للتعديل من جديد."
   },
   "homework": {
     "title": "الواجبات",

@@ -3,6 +3,7 @@ import {
   BookOpen,
   CalendarClock,
   CalendarDays,
+  FileText,
   GraduationCap,
   Layers,
   LayoutGrid,
@@ -28,6 +29,7 @@ const SECTIONS = [
   { href: "/admin/students", key: "students", Icon: GraduationCap },
   { href: "/admin/guardians", key: "guardians", Icon: Users },
   { href: "/admin/teachers", key: "teachers", Icon: UserCog },
+  { href: "/admin/bulletins", key: "bulletins", Icon: FileText },
   { href: "/admin/settings", key: "settings", Icon: Settings },
 ] as const;
 

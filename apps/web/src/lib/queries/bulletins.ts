@@ -1,6 +1,9 @@
+import type { BulletinDecision } from "@madrasti/core";
 import {
   assessments,
   attendance,
+  bulletinLines,
+  bulletins,
   classGroups,
   classSubjects,
   db,
@@ -22,7 +25,7 @@ import {
   roundNullable,
   subjectAverage,
 } from "@madrasti/grading";
-import { and, asc, eq, gte, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 
 /**
  * Reading a class's bulletins.
@@ -336,6 +339,242 @@ export async function getAppreciationSheet(
     text: textByStudent.get(student.studentId) ?? null,
     average: roundNullable(subjectAverage(marksByStudent.get(student.studentId) ?? [])),
   }));
+}
+
+/**
+ * The draft a class is reviewed against: the head teacher's overall remark and
+ * the council decision, before anything is published.
+ *
+ * A `bulletins` row with a null `published_at` **is** the draft. It carries the
+ * two written fields and no figures at all — the figures are computed live
+ * until publication freezes them, and a draft row holding a stale average would
+ * be a second source of truth with no way to tell which one was current.
+ */
+export type BulletinDraft = {
+  studentId: string;
+  appreciation: string | null;
+  decision: BulletinDecision | null;
+  publishedAt: Date | null;
+};
+
+export async function getBulletinDrafts(
+  classGroupId: string,
+  termId: string
+): Promise<Map<string, BulletinDraft>> {
+  const rows = await db
+    .select({
+      studentId: bulletins.studentId,
+      appreciation: bulletins.appreciation,
+      decision: bulletins.decision,
+      publishedAt: bulletins.publishedAt,
+    })
+    .from(bulletins)
+    .innerJoin(
+      enrolments,
+      and(eq(enrolments.studentId, bulletins.studentId), isNull(enrolments.leftOn))
+    )
+    .where(and(eq(enrolments.classGroupId, classGroupId), eq(bulletins.termId, termId)));
+
+  return new Map(rows.map((row) => [row.studentId, row]));
+}
+
+/** When this class's bulletins were published for this term, if they were. */
+export async function getPublicationState(
+  classGroupId: string,
+  termId: string
+): Promise<{ publishedAt: Date; count: number } | null> {
+  const [row] = await db
+    .select({
+      publishedAt: sql<string | null>`max(${bulletins.publishedAt})`,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(bulletins)
+    .innerJoin(
+      enrolments,
+      and(eq(enrolments.studentId, bulletins.studentId), isNull(enrolments.leftOn))
+    )
+    .where(
+      and(
+        eq(enrolments.classGroupId, classGroupId),
+        eq(bulletins.termId, termId),
+        isNotNull(bulletins.publishedAt)
+      )
+    );
+
+  if (!row?.publishedAt || row.count === 0) return null;
+  return { publishedAt: new Date(row.publishedAt), count: row.count };
+}
+
+/** One frozen subject line, as it stood at publication. */
+export type StoredBulletinLine = {
+  subjectId: string;
+  nameFr: string;
+  nameAr: string;
+  nameEn: string;
+  average: number | null;
+  coefficient: number;
+  weightedPoints: number | null;
+  rank: number | null;
+  appreciation: string | null;
+};
+
+export type StoredBulletin = BulletinStudentName & {
+  bulletinId: string;
+  generalAverage: number | null;
+  rank: number | null;
+  classSize: number | null;
+  absenceCount: number;
+  appreciation: string | null;
+  decision: BulletinDecision | null;
+  publishedAt: Date;
+  lines: StoredBulletinLine[];
+};
+
+/**
+ * The published bulletins for a class and term — what families were shown.
+ *
+ * Read from `bulletins` and `bulletin_lines`, never recomputed. These are
+ * allowed to disagree with `computeClassBulletins`, and the review screen's job
+ * is to say so: a mark corrected after publication moves the live figure and
+ * must **not** move the document already handed over (`CLAUDE.md` §6).
+ *
+ * Two queries whatever the class size — the header rows, then every line for
+ * those bulletins at once.
+ */
+export async function getStoredBulletins(
+  classGroupId: string,
+  termId: string
+): Promise<StoredBulletin[]> {
+  const headers = await db
+    .select(storedColumns)
+    .from(bulletins)
+    .innerJoin(students, eq(students.id, bulletins.studentId))
+    .innerJoin(
+      enrolments,
+      and(eq(enrolments.studentId, bulletins.studentId), isNull(enrolments.leftOn))
+    )
+    .where(
+      and(
+        eq(enrolments.classGroupId, classGroupId),
+        eq(bulletins.termId, termId),
+        isNotNull(bulletins.publishedAt)
+      )
+    )
+    .orderBy(asc(students.lastNameFr), asc(students.firstNameFr));
+
+  if (headers.length === 0) return [];
+
+  const lines = await getStoredLines(headers.map((row) => row.bulletinId));
+  return headers.map((row) => toStoredBulletin(row, lines.get(row.bulletinId) ?? []));
+}
+
+/** One student's published bulletin for a term, or null if none was published. */
+export async function getStudentBulletin(
+  studentId: string,
+  termId: string
+): Promise<StoredBulletin | null> {
+  const [row] = await db
+    .select(storedColumns)
+    .from(bulletins)
+    .innerJoin(students, eq(students.id, bulletins.studentId))
+    .where(
+      and(
+        eq(bulletins.studentId, studentId),
+        eq(bulletins.termId, termId),
+        // A draft is not a bulletin. A family asking for one they have not been
+        // given gets "nothing here", never a half-written document.
+        isNotNull(bulletins.publishedAt)
+      )
+    )
+    .limit(1);
+
+  if (!row) return null;
+  const lines = await getStoredLines([row.bulletinId]);
+  return toStoredBulletin(row, lines.get(row.bulletinId) ?? []);
+}
+
+const storedColumns = {
+  bulletinId: bulletins.id,
+  studentId: students.id,
+  firstNameFr: students.firstNameFr,
+  lastNameFr: students.lastNameFr,
+  firstNameAr: students.firstNameAr,
+  lastNameAr: students.lastNameAr,
+  massarCode: students.massarCode,
+  generalAverage: bulletins.generalAverage,
+  rank: bulletins.rank,
+  classSize: bulletins.classSize,
+  absenceCount: bulletins.absenceCount,
+  appreciation: bulletins.appreciation,
+  decision: bulletins.decision,
+  publishedAt: bulletins.publishedAt,
+};
+
+function toStoredBulletin(
+  row: {
+    [K in keyof typeof storedColumns]: K extends "generalAverage"
+      ? string | null
+      : K extends "publishedAt"
+        ? Date | null
+        : K extends "decision"
+          ? BulletinDecision | null
+          : K extends "rank" | "classSize"
+            ? number | null
+            : K extends "absenceCount"
+              ? number
+              : K extends "massarCode" | "appreciation"
+                ? string | null
+                : string;
+  },
+  lines: StoredBulletinLine[]
+): StoredBulletin {
+  return {
+    ...row,
+    generalAverage: row.generalAverage === null ? null : Number(row.generalAverage),
+    // Narrowed rather than asserted away: the column is nullable, and every
+    // query above filters on it being present.
+    publishedAt: row.publishedAt ?? new Date(0),
+    lines,
+  };
+}
+
+/** Every frozen line for the given bulletins, in one query. */
+async function getStoredLines(bulletinIds: string[]): Promise<Map<string, StoredBulletinLine[]>> {
+  const rows = await db
+    .select({
+      bulletinId: bulletinLines.bulletinId,
+      subjectId: bulletinLines.subjectId,
+      nameFr: subjects.nameFr,
+      nameAr: subjects.nameAr,
+      nameEn: subjects.nameEn,
+      average: bulletinLines.average,
+      coefficient: bulletinLines.coefficient,
+      weightedPoints: bulletinLines.weightedPoints,
+      rank: bulletinLines.rank,
+      appreciation: bulletinLines.appreciation,
+    })
+    .from(bulletinLines)
+    .innerJoin(subjects, eq(subjects.id, bulletinLines.subjectId))
+    .where(inArray(bulletinLines.bulletinId, bulletinIds))
+    .orderBy(asc(subjects.nameFr));
+
+  const out = new Map<string, StoredBulletinLine[]>();
+  for (const row of rows) {
+    const list = out.get(row.bulletinId) ?? [];
+    list.push({
+      subjectId: row.subjectId,
+      nameFr: row.nameFr,
+      nameAr: row.nameAr,
+      nameEn: row.nameEn,
+      average: row.average === null ? null : Number(row.average),
+      coefficient: Number(row.coefficient),
+      weightedPoints: row.weightedPoints === null ? null : Number(row.weightedPoints),
+      rank: row.rank,
+      appreciation: row.appreciation,
+    });
+    out.set(row.bulletinId, list);
+  }
+  return out;
 }
 
 /** The class and term, for a screen heading. Null when either does not exist. */

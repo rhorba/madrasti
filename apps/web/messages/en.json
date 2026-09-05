@@ -129,7 +129,10 @@
     "nothingToCopy": "No lessons to duplicate on that day.",
     "allSlotsConflict": "Every lesson clashes on that day.",
     "appreciationTooLong": "Appreciation is too long.",
-    "noAppreciations": "No appreciations to save."
+    "noAppreciations": "No appreciations to save.",
+    "bulletinPublished": "Report cards for this term are published. An admin must unpublish them before anything can change.",
+    "notPublished": "No published report cards for this class and term.",
+    "noBulletins": "No report cards to save."
   },
   "admin": {
     "home": {
@@ -551,6 +554,42 @@
     "retry": "Try again",
     "saved": "Appreciations saved.",
     "textKept": "Your appreciations have been kept."
+  },
+  "bulletins": {
+    "title": "Report cards",
+    "needYear": "No academic year is running.",
+    "needClasses": "No class or term for this year.",
+    "noStudents": "No students in this class.",
+    "chooseClass": "Choose a class",
+    "chooseTerm": "Choose a term",
+    "average": "General average",
+    "rankOf": "{rank} of {of}",
+    "absences": "{count} days absent",
+    "appreciationFor": "Overall appreciation for {name}",
+    "appreciationPlaceholder": "A satisfactory term overall.",
+    "decisionFor": "Council decision for {name}",
+    "noDecision": "No decision",
+    "decisions": {
+      "admis": "Passed",
+      "admis_avec_felicitations": "Passed with honours",
+      "encouragements": "Encouragement",
+      "avertissement": "Warning",
+      "redouble": "Repeats the year"
+    },
+    "tooLong": "{over} character(s) too many — maximum {max}.",
+    "toPublish": "{count} report card(s) to publish",
+    "saveDraft": "Save draft",
+    "publish": "Publish report cards",
+    "reviewSaved": "Draft saved.",
+    "publishedNotice": "Report cards published. Families can see them.",
+    "publishedOn": "Published on {date}.",
+    "publishedExplainer": "This term's marks and appreciations are frozen for this class. This is the document families see.",
+    "frozen": "This term is frozen for this class.",
+    "unpublish": "Unpublish",
+    "unpublishReason": "Reason for unpublishing (kept in the audit log)",
+    "confirmUnpublish": "Yes, unpublish",
+    "cancel": "Cancel",
+    "unpublished": "Report cards unpublished. Marks can be edited again."
   },
   "homework": {
     "title": "Homework",

@@ -129,7 +129,10 @@
     "nothingToCopy": "Aucune séance à dupliquer ce jour-là.",
     "allSlotsConflict": "Toutes les séances entrent en conflit ce jour-là.",
     "appreciationTooLong": "Appréciation trop longue.",
-    "noAppreciations": "Aucune appréciation à enregistrer."
+    "noAppreciations": "Aucune appréciation à enregistrer.",
+    "bulletinPublished": "Les bulletins de ce trimestre sont publiés. Un administrateur doit les dépublier avant toute modification.",
+    "notPublished": "Aucun bulletin publié pour cette classe et ce trimestre.",
+    "noBulletins": "Aucun bulletin à enregistrer."
   },
   "admin": {
     "home": {
@@ -551,6 +554,42 @@
     "retry": "Réessayer",
     "saved": "Appréciations enregistrées.",
     "textKept": "Vos appréciations sont conservées."
+  },
+  "bulletins": {
+    "title": "Bulletins",
+    "needYear": "Aucune année scolaire en cours.",
+    "needClasses": "Aucune classe ni trimestre pour cette année.",
+    "noStudents": "Aucun élève inscrit dans cette classe.",
+    "chooseClass": "Choisir une classe",
+    "chooseTerm": "Choisir un trimestre",
+    "average": "Moyenne générale",
+    "rankOf": "{rank}e sur {of}",
+    "absences": "{count} absence(s)",
+    "appreciationFor": "Appréciation générale pour {name}",
+    "appreciationPlaceholder": "Trimestre satisfaisant dans l'ensemble.",
+    "decisionFor": "Décision du conseil pour {name}",
+    "noDecision": "Aucune décision",
+    "decisions": {
+      "admis": "Admis",
+      "admis_avec_felicitations": "Admis avec félicitations",
+      "encouragements": "Encouragements",
+      "avertissement": "Avertissement",
+      "redouble": "Redouble"
+    },
+    "tooLong": "{over} caractère(s) de trop — maximum {max}.",
+    "toPublish": "{count} bulletin(s) à publier",
+    "saveDraft": "Enregistrer le brouillon",
+    "publish": "Publier les bulletins",
+    "reviewSaved": "Brouillon enregistré.",
+    "publishedNotice": "Bulletins publiés. Les familles y ont accès.",
+    "publishedOn": "Publiés le {date}.",
+    "publishedExplainer": "Les notes et appréciations de ce trimestre sont figées pour cette classe. Les familles voient ce document.",
+    "frozen": "Ce trimestre est figé pour cette classe.",
+    "unpublish": "Dépublier",
+    "unpublishReason": "Motif de la dépublication (conservé dans le journal)",
+    "confirmUnpublish": "Oui, dépublier",
+    "cancel": "Annuler",
+    "unpublished": "Bulletins dépubliés. Les notes sont de nouveau modifiables."
   },
   "homework": {
     "title": "Devoirs",

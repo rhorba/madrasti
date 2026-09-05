@@ -3,6 +3,7 @@
 import { defineAction } from "@/lib/action";
 import { assertCanGradeAssessment, assertCanGradeClassSubject } from "@/lib/auth/scope";
 import type { AppSession } from "@/lib/auth/session";
+import { assertTermOpenForAssessment, assertTermOpenForClassSubject } from "@/lib/bulletin-freeze";
 import {
   type AssessmentInput,
   type AssessmentUpdateInput,
@@ -27,10 +28,17 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
  *    database refuses it again with a CHECK, and neither is redundant — the
  *    first gives the teacher a sentence she can act on, the second means no
  *    code path anywhere can produce the state.
+ * 3. **Nothing here writes into a published term.** Every one of these five
+ *    actions moves an average, so every one of them is behind the freeze
+ *    (`lib/bulletin-freeze.ts`). Guarding only `saveGrades` would leave four
+ *    ways to change a document a family already holds — deleting an
+ *    assessment, or merely re-weighting one, rewrites the bulletin just as
+ *    surely as editing a mark does.
  */
 
 async function create(input: AssessmentInput, { session }: { session: AppSession }) {
   await assertCanGradeClassSubject(session, input.classSubjectId);
+  await assertTermOpenForClassSubject(input.classSubjectId, input.termId);
 
   const [row] = await db
     .insert(assessments)
@@ -65,6 +73,7 @@ export const createAssessment = defineAction({
 
 async function update(input: AssessmentUpdateInput, { session }: { session: AppSession }) {
   await assertCanGradeAssessment(session, input.id);
+  await assertTermOpenForAssessment(input.id);
 
   await db
     .update(assessments)
@@ -107,6 +116,7 @@ export const updateAssessment = defineAction({
  */
 async function remove(input: { id: string }, { session }: { session: AppSession }) {
   await assertCanGradeAssessment(session, input.id);
+  await assertTermOpenForAssessment(input.id);
 
   const [row] = await db
     .update(assessments)
@@ -173,6 +183,7 @@ async function saveMarkSheet(input: SaveGradesInput, { session }: { session: App
   const { classSubjectId } = await assertCanGradeAssessment(session, input.assessmentId);
 
   return db.transaction(async (tx) => {
+    await assertTermOpenForAssessment(input.assessmentId, tx);
     await assertStudentsBelong(
       tx,
       input.assessmentId,

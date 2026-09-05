@@ -8,6 +8,7 @@ import {
   assignmentUpdateSchema,
   attachmentRequestSchema,
   attendanceMarkSchema,
+  bulletinReviewEntrySchema,
   changePasswordSchema,
   classSubjectSchema,
   dateStringSchema,
@@ -18,14 +19,17 @@ import {
   massarCodeSchema,
   passwordSchema,
   phoneSchema,
+  publishBulletinsSchema,
   saveAppreciationsSchema,
   saveAttendanceSchema,
+  saveBulletinReviewSchema,
   saveGradesSchema,
   signInSchema,
   subjectSchema,
   termSchema,
   timeStringSchema,
   timetableSlotSchema,
+  unpublishBulletinsSchema,
   updateTimetableSlotSchema,
   weekdaySchema,
 } from "./index.js";
@@ -432,6 +436,53 @@ describe("appreciations", () => {
         entries: [{ studentId: other, text: "Bien." }],
       }).success
     ).toBe(false);
+  });
+});
+
+describe("publishing bulletins", () => {
+  const classGroupId = "b3f1a1f4-5c2e-4b6d-9f1a-1f45c2e4b6d9";
+  const termId = "c4a2b2e5-6d3f-4c7e-8a2b-2e56d3f4c7e8";
+  const studentId = "d5b3c3f6-7e4a-4d8f-9b3c-3f67e4a5d8f9";
+
+  it("takes a class and a term, never a single student", () => {
+    // A rank is a statement about a cohort. Half a published class would print
+    // "5e sur 14" on a sheet whose class holds 32 pupils.
+    expect(publishBulletinsSchema.safeParse({ classGroupId, termId }).success).toBe(true);
+    expect(publishBulletinsSchema.safeParse({ studentId, termId }).success).toBe(false);
+  });
+
+  it("requires a stated reason to unpublish", () => {
+    // Unpublishing reopens marks a family has already been shown; a year later
+    // this sentence is the only thing that can explain a changed average.
+    expect(
+      unpublishBulletinsSchema.safeParse({ classGroupId, termId, reason: "Erreur de saisie." })
+        .success
+    ).toBe(true);
+    expect(
+      issueFor(
+        unpublishBulletinsSchema.safeParse({ classGroupId, termId, reason: "   " }),
+        "reason"
+      )
+    ).toBe("errors.required");
+    expect(unpublishBulletinsSchema.safeParse({ classGroupId, termId }).success).toBe(false);
+  });
+
+  it("accepts a council decision, or none at all", () => {
+    const base = { studentId, appreciation: "Trimestre solide." };
+    expect(bulletinReviewEntrySchema.safeParse({ ...base, decision: "admis" }).success).toBe(true);
+    // A school that does not record a decision leaves the line off the sheet
+    // rather than printing an empty label.
+    expect(bulletinReviewEntrySchema.safeParse({ ...base, decision: null }).success).toBe(true);
+    expect(bulletinReviewEntrySchema.safeParse(base).success).toBe(true);
+    expect(bulletinReviewEntrySchema.safeParse({ ...base, decision: "passed" }).success).toBe(
+      false
+    );
+  });
+
+  it("refuses an empty review sheet", () => {
+    expect(
+      issueFor(saveBulletinReviewSchema.safeParse({ classGroupId, termId, entries: [] }))
+    ).toBe("errors.noBulletins");
   });
 });
 

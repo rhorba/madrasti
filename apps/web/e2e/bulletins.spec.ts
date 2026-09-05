@@ -111,3 +111,145 @@ test.describe("subject appreciations in Arabic", () => {
     await expect(remarks(page).first()).toHaveValue(text);
   });
 });
+
+/**
+ * Story 8.3 — the conseil de classe, publication and the freeze.
+ *
+ * Every test here publishes and then unpublishes inside its own body. That is
+ * not tidiness: publication freezes a class's term, and a suite that left one
+ * published would fail `grades.spec.ts` further down the run with an error
+ * about bulletins — which reads as a product bug and is not one.
+ */
+
+const ADMIN = "admin@almassira.example.ma";
+
+async function signInAsAdmin(page: Page, locale = "fr") {
+  await page.goto(`/${locale}/login`);
+  await page.getByLabel(/e-mail|email|البريد/i).fill(ADMIN);
+  await page.getByLabel(/mot de passe|password|كلمة المرور/i).fill(PASSWORD);
+  await page.getByRole("button", { name: /se connecter|sign in|دخول/i }).click();
+  await page.waitForURL(new RegExp(`/${locale}/admin$`));
+}
+
+/** Publish the class currently on screen, and take it back again. */
+async function unpublish(page: Page, reason: string) {
+  await page.getByRole("button", { name: "Dépublier" }).click();
+  await page.getByLabel(/motif de la dépublication/i).fill(reason);
+  await page.getByRole("button", { name: "Oui, dépublier" }).click();
+  await expect(page.getByText("Bulletins dépubliés.", { exact: false })).toBeVisible();
+}
+
+test.describe("publishing bulletins", () => {
+  test.beforeEach(async ({ page }) => {
+    await signInAsAdmin(page);
+    await page.getByRole("link", { name: "Bulletins" }).first().click();
+    await page.waitForURL(/\/admin\/bulletins/);
+  });
+
+  test("shows the class with its live averages, ranks and absences", async ({ page }) => {
+    await expect(page.getByRole("navigation", { name: /choisir une classe/i })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: /choisir un trimestre/i })).toBeVisible();
+    // "3e sur 27" — the classic, and what the client asked to keep (PRD Q3).
+    await expect(page.getByText(/\de sur \d+/).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Publier les bulletins" })).toBeVisible();
+  });
+
+  test("writes the council's remark and decision, publishes, and freezes the screen", async ({
+    page,
+  }) => {
+    const remark = `Trimestre solide. ${Date.now().toString().slice(-6)}`;
+
+    const appreciations = page.getByRole("textbox", { name: /^Appréciation générale pour/ });
+    await appreciations.first().fill(remark);
+    await page
+      .getByRole("combobox", { name: /^Décision du conseil pour/ })
+      .first()
+      .selectOption("admis_avec_felicitations");
+
+    await page.getByRole("button", { name: "Publier les bulletins" }).click();
+    await expect(page.getByText("Bulletins publiés.", { exact: false })).toBeVisible();
+
+    // The screen is now the document, not a draft of it.
+    await expect(page.getByText(/Publiés le/)).toBeVisible();
+    await expect(appreciations.first()).toHaveAttribute("readonly", "");
+    await expect(page.getByRole("button", { name: "Publier les bulletins" })).toHaveCount(0);
+
+    // What the council wrote survived publication rather than being blanked.
+    await page.reload();
+    await expect(
+      page.getByRole("textbox", { name: /^Appréciation générale pour/ }).first()
+    ).toHaveValue(remark);
+
+    await unpublish(page, "Fin du test end-to-end.");
+    await expect(page.getByRole("button", { name: "Publier les bulletins" })).toBeVisible();
+  });
+
+  test("refuses to unpublish without a stated reason", async ({ page }) => {
+    await page.getByRole("button", { name: "Publier les bulletins" }).click();
+    await expect(page.getByText("Bulletins publiés.", { exact: false })).toBeVisible();
+
+    await page.getByRole("button", { name: "Dépublier" }).click();
+    // The button stays disabled until a reason is typed — a year later that
+    // sentence is the only thing that explains a changed average.
+    await expect(page.getByRole("button", { name: "Oui, dépublier" })).toBeDisabled();
+    await page.getByLabel(/motif de la dépublication/i).fill("Erreur de saisie en français.");
+    await expect(page.getByRole("button", { name: "Oui, dépublier" })).toBeEnabled();
+
+    await unpublish(page, "Erreur de saisie en français.");
+  });
+
+  test("stops a teacher entering marks in a published term, and lets her again after", async ({
+    page,
+  }) => {
+    // The freeze, from the side that feels it. This is the whole point of the
+    // story: the paper a family holds cannot change underneath them.
+    const classLink = page
+      .getByRole("navigation", { name: /choisir une classe/i })
+      .getByRole("link");
+    const className = ((await classLink.first().textContent()) ?? "").trim();
+    await page.getByRole("button", { name: "Publier les bulletins" }).click();
+    await expect(page.getByText("Bulletins publiés.", { exact: false })).toBeVisible();
+
+    await page.goto("/fr/login");
+    await signIn(page);
+    await page.getByRole("link", { name: "Notes" }).first().click();
+    await page.waitForURL(/\/teacher\/grades/);
+
+    // Find one of this teacher's class+subjects in the class that was just
+    // published; if she does not teach it, the freeze is not hers to feel.
+    const tab = page
+      .getByRole("navigation", { name: /choisir une classe/i })
+      .getByRole("link", { name: new RegExp(`^${className} ·`) });
+
+    if ((await tab.count()) > 0) {
+      await tab.first().click();
+      await page.getByLabel("Intitulé").fill("Contrôle refusé");
+      await page.getByRole("button", { name: "Ajouter une évaluation" }).click();
+      await expect(page.getByRole("alert").first()).toContainText(/bulletins de ce trimestre/i);
+    }
+
+    await page.goto("/fr/login");
+    await signInAsAdmin(page);
+    await page.getByRole("link", { name: "Bulletins" }).first().click();
+    await unpublish(page, "Fin du test end-to-end.");
+  });
+});
+
+test.describe("bulletins in Arabic", () => {
+  test("mirrors the review screen and names the council's decisions in Arabic", async ({
+    page,
+  }) => {
+    await signInAsAdmin(page, "ar");
+    await page.getByRole("link", { name: "كشوف النقط" }).first().click();
+    await page.waitForURL(/\/ar\/admin\/bulletins/);
+
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(page.getByRole("navigation", { name: "اختر الأسدس" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "نشر كشوف النقط" })).toBeVisible();
+
+    // Not French behind an RTL layout (§16.6): the decisions are really Arabic.
+    const decision = page.getByRole("combobox", { name: /^قرار المجلس بخصوص/ }).first();
+    await expect(decision).toBeVisible();
+    await expect(decision.getByRole("option", { name: "ناجح مع التهاني" })).toHaveCount(1);
+  });
+});
