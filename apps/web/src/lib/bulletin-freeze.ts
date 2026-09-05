@@ -20,7 +20,7 @@ import { and, eq, isNotNull, isNull } from "drizzle-orm";
  *    she can act on, in her own language. A save that appeared to succeed and
  *    changed nothing would be far worse than a refusal.
  *
- * The way back is `withdrawBulletins`: an admin takes the document back, with
+ * The way back is `unpublishBulletins`: an admin takes the document back, with
  * a reason, and the term reopens. That is a deliberate, audited act by the
  * person answerable for the paperwork — not something a mark entry does by
  * accident.

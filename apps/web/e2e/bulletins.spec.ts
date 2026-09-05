@@ -131,9 +131,20 @@ async function signInAsAdmin(page: Page, locale = "fr") {
   await page.waitForURL(new RegExp(`/${locale}/admin$`));
 }
 
-/** Publish the class currently on screen, and take it back again. */
+/**
+ * Take back the class currently on screen.
+ *
+ * `exact` matters on the opening click: "Dépublier" is a substring of
+ * "Oui, dépublier", and role-name matching is substring and case-insensitive,
+ * so without it this hits the confirm button and unpublishes with no reason.
+ */
 async function unpublish(page: Page, reason: string) {
-  await page.getByRole("button", { name: "Dépublier" }).click();
+  await page.getByRole("button", { name: "Dépublier", exact: true }).click();
+  await confirmUnpublish(page, reason);
+}
+
+/** The confirm half, for a test that has already opened the panel itself. */
+async function confirmUnpublish(page: Page, reason: string) {
   await page.getByLabel(/motif de la dépublication/i).fill(reason);
   await page.getByRole("button", { name: "Oui, dépublier" }).click();
   await expect(page.getByText("Bulletins dépubliés.", { exact: false })).toBeVisible();
@@ -188,18 +199,22 @@ test.describe("publishing bulletins", () => {
     await page.getByRole("button", { name: "Publier les bulletins" }).click();
     await expect(page.getByText("Bulletins publiés.", { exact: false })).toBeVisible();
 
-    await page.getByRole("button", { name: "Dépublier" }).click();
+    await page.getByRole("button", { name: "Dépublier", exact: true }).click();
     // The button stays disabled until a reason is typed — a year later that
     // sentence is the only thing that explains a changed average.
     await expect(page.getByRole("button", { name: "Oui, dépublier" })).toBeDisabled();
     await page.getByLabel(/motif de la dépublication/i).fill("Erreur de saisie en français.");
     await expect(page.getByRole("button", { name: "Oui, dépublier" })).toBeEnabled();
 
-    await unpublish(page, "Erreur de saisie en français.");
+    // The panel is already open; only the confirm half is left to do. Leaving
+    // the class published here would freeze it for `grades.spec.ts` further
+    // down the run.
+    await confirmUnpublish(page, "Erreur de saisie en français.");
   });
 
   test("stops a teacher entering marks in a published term, and lets her again after", async ({
     page,
+    context,
   }) => {
     // The freeze, from the side that feels it. This is the whole point of the
     // story: the paper a family holds cannot change underneath them.
@@ -210,27 +225,32 @@ test.describe("publishing bulletins", () => {
     await page.getByRole("button", { name: "Publier les bulletins" }).click();
     await expect(page.getByText("Bulletins publiés.", { exact: false })).toBeVisible();
 
-    await page.goto("/fr/login");
+    // The session has to go first: middleware sends anyone already signed in
+    // away from /login, so navigating there as the admin would simply bounce
+    // back to /fr/admin and never offer the form.
+    await context.clearCookies();
     await signIn(page);
     await page.getByRole("link", { name: "Notes" }).first().click();
     await page.waitForURL(/\/teacher\/grades/);
 
-    // Find one of this teacher's class+subjects in the class that was just
-    // published; if she does not teach it, the freeze is not hers to feel.
+    // The seed gives this teacher Arabic in the first class on the admin's
+    // list, which is the one just published. Asserted rather than skipped over:
+    // a seed change that broke the overlap would otherwise leave this test
+    // passing while exercising nothing at all.
     const tab = page
       .getByRole("navigation", { name: /choisir une classe/i })
       .getByRole("link", { name: new RegExp(`^${className} ·`) });
+    expect(await tab.count(), `the teacher does not teach ${className}`).toBeGreaterThan(0);
 
-    if ((await tab.count()) > 0) {
-      await tab.first().click();
-      await page.getByLabel("Intitulé").fill("Contrôle refusé");
-      await page.getByRole("button", { name: "Ajouter une évaluation" }).click();
-      await expect(page.getByRole("alert").first()).toContainText(/bulletins de ce trimestre/i);
-    }
+    await tab.first().click();
+    await page.getByLabel("Intitulé").fill("Contrôle refusé");
+    await page.getByRole("button", { name: "Ajouter une évaluation" }).click();
+    await expect(page.getByRole("alert").first()).toContainText(/bulletins de ce trimestre/i);
 
-    await page.goto("/fr/login");
+    await context.clearCookies();
     await signInAsAdmin(page);
     await page.getByRole("link", { name: "Bulletins" }).first().click();
+    await page.waitForURL(/\/admin\/bulletins/);
     await unpublish(page, "Fin du test end-to-end.");
   });
 });

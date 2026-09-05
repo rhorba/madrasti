@@ -132,6 +132,7 @@
     "noAppreciations": "Aucune appréciation à enregistrer.",
     "bulletinPublished": "Les bulletins de ce trimestre sont publiés. Un administrateur doit les dépublier avant toute modification.",
     "notPublished": "Aucun bulletin publié pour cette classe et ce trimestre.",
+    "noStudents": "Cette classe ne compte aucun élève inscrit : il n'y a pas de bulletin à publier.",
     "noBulletins": "Aucun bulletin à enregistrer."
   },
   "admin": {

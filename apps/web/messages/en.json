@@ -132,6 +132,7 @@
     "noAppreciations": "No appreciations to save.",
     "bulletinPublished": "Report cards for this term are published. An admin must unpublish them before anything can change.",
     "notPublished": "No published report cards for this class and term.",
+    "noStudents": "This class has no enrolled students, so there are no report cards to publish.",
     "noBulletins": "No report cards to save."
   },
   "admin": {
