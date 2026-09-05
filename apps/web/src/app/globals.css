@@ -370,11 +370,31 @@ body {
     break-after: auto;
   }
 
-  /* The signature block's gap is set for the screen. On paper it is the
-     cheapest vertical space to reclaim, and reclaiming it is what keeps the
-     Arabic sheet — the tallest of the three — on one side of one page. */
+  /*
+   * Reclaiming vertical space, so that even the **tallest** sheet in a class
+   * fits one page.
+   *
+   * Sheets are not all the same height: a pupil whose teachers wrote long
+   * remarks makes a taller one, and in Arabic the tallest ran 992px against
+   * 939px of usable A4 while the first one fitted. Tuning the type alone
+   * chased the average and left the tail spilling — which is why 21 of 23
+   * bulletins were still splitting after two rounds of it.
+   *
+   * So the space comes from structure rather than from type: twelve table rows
+   * pay for their padding twice each, and the blank ruled space reserved for a
+   * handwritten remark can be shorter on paper than it looks on screen.
+   */
   .bulletin-sheet > footer {
-    margin-block-start: 0.75rem;
+    margin-block-start: 0.5rem;
+  }
+
+  .bulletin-table th,
+  .bulletin-table td {
+    padding: 0.8mm 2mm;
+  }
+
+  .bulletin-sheet section p[dir="auto"] {
+    min-height: 7mm;
   }
 
   /*
