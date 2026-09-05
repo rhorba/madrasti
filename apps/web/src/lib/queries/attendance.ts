@@ -190,10 +190,15 @@ export async function getClassAbsenceTotals(
       lastNameFr: students.lastNameFr,
       firstNameAr: students.firstNameAr,
       lastNameAr: students.lastNameAr,
-      absent: sql<number>`count(*) filter (where ${attendance.status} = 'absent')::int`,
-      late: sql<number>`count(*) filter (where ${attendance.status} = 'late')::int`,
-      excused: sql<number>`count(*) filter (where ${attendance.status} = 'excused')::int`,
-      totalMarked: sql<number>`count(${attendance.id})::int`,
+      // Every count is guarded on the session having survived the join.
+      // Putting the term bounds in the LEFT JOIN alone does **not** filter:
+      // an out-of-term mark keeps its attendance row and simply arrives with
+      // a null session, so `count(*) filter (where status = 'absent')` would
+      // still count it and trimestre 1 would carry trimestre 2's absences.
+      absent: sql<number>`count(${sessions.id}) filter (where ${attendance.status} = 'absent')::int`,
+      late: sql<number>`count(${sessions.id}) filter (where ${attendance.status} = 'late')::int`,
+      excused: sql<number>`count(${sessions.id}) filter (where ${attendance.status} = 'excused')::int`,
+      totalMarked: sql<number>`count(${sessions.id})::int`,
     })
     .from(enrolments)
     .innerJoin(students, eq(students.id, enrolments.studentId))

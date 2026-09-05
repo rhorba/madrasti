@@ -122,18 +122,33 @@ export async function assertCanReachClass(
 }
 
 /**
+ * A connection or an open transaction.
+ *
+ * Every other check here reads committed data, so it can use the pool. Marking
+ * a register cannot: the session is materialised inside the caller's
+ * transaction and is invisible from any other connection until it commits, so
+ * the check has to run on the same transaction or it would refuse every first
+ * save (`.logs/issues.md`, 2026-09-05).
+ */
+export type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
  * Can this session take or amend the register for this session?
  *
  * Stricter than reading: only the teacher who teaches that slot, the recorded
  * substitute, or an admin.
  */
-export async function assertCanMarkSession(session: AppSession, sessionId: string): Promise<void> {
+export async function assertCanMarkSession(
+  session: AppSession,
+  sessionId: string,
+  executor: Executor = db
+): Promise<void> {
   if (session.role === "admin") return;
   if (session.role !== "teacher" || !session.teacherId) {
     throw new NotAuthorizedError(`role ${session.role} -> mark session ${sessionId}`);
   }
 
-  const [row] = await db
+  const [row] = await executor
     .select({
       titularTeacherId: classSubjects.teacherId,
       actualTeacherId: sessions.actualTeacherId,

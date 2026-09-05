@@ -111,6 +111,7 @@
     "notAuthorized": "Vous n'avez pas accès à cette page.",
     "notFound": "Élément introuvable.",
     "unexpected": "Une erreur est survenue. Réessayez.",
+    "network": "La connexion a été perdue.",
     "emailTaken": "Cette adresse e-mail est déjà utilisée.",
     "massarTaken": "Ce code Massar est déjà attribué à un autre élève.",
     "classNameTaken": "Une classe porte déjà ce nom cette année.",

@@ -118,7 +118,7 @@ export function Register({
   function save() {
     setError(null);
     startTransition(async () => {
-      const result = await saveAttendance({
+      const payload = {
         slotId,
         date,
         marks: students.map((student) => {
@@ -129,18 +129,24 @@ export function Register({
             minutesLate: mark?.status === "late" ? mark.minutesLate : null,
           };
         }),
-      });
+      };
 
-      if (!result.ok) {
-        // The marks stay exactly where they are. School wifi drops, and asking
-        // a teacher to re-enter thirty marks is how you lose her for good
-        // (`docs/ux-madrasti.md` §3.8).
-        setError(result.error);
-        return;
+      // Every failure lands in the same place, and the marks stay exactly
+      // where they are. School wifi drops, and asking a teacher to re-enter
+      // thirty marks is how you lose her for good (`docs/ux-madrasti.md` §3.8)
+      // — including when the request never arrives at all, which is the case
+      // an unawaited rejection would otherwise turn into a blank error screen.
+      try {
+        const result = await saveAttendance(payload);
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        setSaved(true);
+        router.refresh();
+      } catch {
+        setError("errors.network");
       }
-
-      setSaved(true);
-      router.refresh();
     });
   }
 

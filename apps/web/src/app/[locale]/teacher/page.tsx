@@ -55,12 +55,22 @@ export default async function TeacherHome({ params }: { params: Promise<{ locale
           <PageHeader title={t("title")} description={date} />
           <EmptyState
             action={
-              <Link
-                href="/teacher/timetable"
-                className="text-sm text-[var(--action-primary)] underline underline-offset-2"
-              >
-                {t("seeWeek")}
-              </Link>
+              // Absences too, not just the week: with no lesson today this is
+              // otherwise a dead end, and Sunday is when a teacher catches up.
+              <span className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+                <Link
+                  href="/teacher/timetable"
+                  className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+                >
+                  {t("seeWeek")}
+                </Link>
+                <Link
+                  href="/teacher/absences"
+                  className="text-sm text-[var(--action-primary)] underline underline-offset-2"
+                >
+                  {tn("absences")}
+                </Link>
+              </span>
             }
           >
             {weekday === 7 ? t("sunday") : t("nothingToday")}

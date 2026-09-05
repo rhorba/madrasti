@@ -111,6 +111,7 @@
     "notAuthorized": "You do not have access to this page.",
     "notFound": "Item not found.",
     "unexpected": "Something went wrong. Please try again.",
+    "network": "The connection was lost.",
     "emailTaken": "That email address is already in use.",
     "massarTaken": "That Massar code belongs to another student.",
     "classNameTaken": "A class with that name already exists this year.",

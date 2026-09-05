@@ -75,7 +75,8 @@ async function saveRegister(input: SaveAttendanceInput, { session }: { session: 
 
     // Authorisation is on the *session*, not the slot: a substitute recorded
     // on the session may mark it even though the slot names someone else.
-    await assertCanMarkSession(session, sessionId);
+    // It runs on `tx`, because the session above may only exist there yet.
+    await assertCanMarkSession(session, sessionId, tx);
     await assertStudentsBelong(
       tx,
       input.slotId,

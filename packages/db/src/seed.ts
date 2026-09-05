@@ -501,13 +501,24 @@ async function main(): Promise<void> {
     ART: 1,
   };
 
-  /** Mon–Fri run morning + afternoon; Saturday is a morning only. */
+  /**
+   * Mon–Fri run morning + afternoon; Saturday is a morning only.
+   *
+   * Ordered **period-major**: the 08:00 hour of every day, then the 09:00 hour
+   * of every day, and so on. Placement below is greedy and stops once a class
+   * owes no more hours, so a day-major order spends all 26 weekly hours on
+   * Monday to Thursday and never reaches Saturday — which Moroccan schools
+   * teach (CLAUDE.md §6) and which the register therefore has to cover. This
+   * order fills the mornings of the whole week first, which is also what a
+   * real primaire/collège timetable looks like.
+   */
   const cells: { weekday: number; start: string; end: string }[] = [];
-  for (let weekday = 1; weekday <= 6; weekday++) {
-    for (const [start, end] of MORNING_SLOTS) cells.push({ weekday, start, end });
-    if (weekday <= 5)
-      for (const [start, end] of AFTERNOON_SLOTS) cells.push({ weekday, start, end });
-  }
+  [...MORNING_SLOTS, ...AFTERNOON_SLOTS].forEach(([start, end], period) => {
+    for (let weekday = 1; weekday <= 6; weekday++) {
+      if (weekday === 6 && period >= MORNING_SLOTS.length) continue;
+      cells.push({ weekday, start, end });
+    }
+  });
 
   const remaining = new Map<string, number>();
   for (const cs of classSubjects) remaining.set(cs.id, WEEKLY_HOURS[cs.code]);
@@ -557,9 +568,13 @@ async function main(): Promise<void> {
 
   const slotRows = await db.insert(s.timetableSlots).values(slotValues).returning();
 
-  // --- sessions & attendance (three weeks back to today) -----------------
+  // --- sessions & attendance (three weeks back, up to yesterday) ---------
+  //
+  // Deliberately stopping at yesterday: today's registers are left untaken so
+  // that whoever opens the demo has something to actually do, and the teacher
+  // home has a lesson to promote rather than reading "all done".
   const teachingDays: Date[] = [];
-  for (let d = addDays(today, -20); d <= today; d = addDays(d, 1)) {
+  for (let d = addDays(today, -20); d < today; d = addDays(d, 1)) {
     if (weekdayOf(d) <= 6 && d >= yearStart) teachingDays.push(d);
   }
 
