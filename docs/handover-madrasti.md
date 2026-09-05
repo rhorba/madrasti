@@ -124,7 +124,7 @@ This is the list from `docs/security-madrasti.md` §10, with its current state.
 | ❌ | **No seeded credentials reachable in production** | **the demo accounts in §2 are live** |
 | ⚠️ | Backups encrypted, off-vendor, **and a restore performed** | restore proven; **not yet scheduled** |
 | ❌ | Log output inspected for personal data after a full journey | not done |
-| ❌ | File objects confirmed non-public by direct URL | N/A until `R2_*` is set |
+| ✅ | File objects confirmed non-public by direct URL | verified: 400 unsigned, 401 on the r2.dev URL |
 | ❌ | Loi 09-08 / CNDP obligation acknowledged in writing | **the school's to do** |
 | ❌ | Repo visibility confirmed with the client | open |
 
