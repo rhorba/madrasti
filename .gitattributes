@@ -1,0 +1,18 @@
+# Line endings.
+#
+# Biome formats to LF and CI runs on Linux, so CI has always been green. On a
+# Windows checkout `core.autocrlf` hands the working tree CRLF, biome reports
+# every such file as a formatting error, and `pnpm lint` fails locally on a
+# tree that is perfectly clean in CI — a gate that cries wolf is a gate people
+# stop running. Normalising here makes the two agree.
+* text=auto eol=lf
+
+# Binary, never touched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

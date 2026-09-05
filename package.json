@@ -12,12 +12,12 @@
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r --if-present test:coverage",
     "test:e2e": "pnpm --filter web test:e2e",
-    "db:generate": "pnpm --filter @madrasti/db generate",
-    "db:migrate": "pnpm --filter @madrasti/db migrate",
-    "db:push": "pnpm --filter @madrasti/db push",
-    "db:seed": "pnpm --filter @madrasti/db seed",
-    "db:studio": "pnpm --filter @madrasti/db studio",
-    "db:setup": "pnpm --filter @madrasti/db setup",
+    "db:generate": "pnpm --filter @madrasti/db run generate",
+    "db:migrate": "pnpm --filter @madrasti/db run migrate",
+    "db:push": "pnpm --filter @madrasti/db run push",
+    "db:seed": "pnpm --filter @madrasti/db run seed",
+    "db:studio": "pnpm --filter @madrasti/db run studio",
+    "db:setup": "pnpm --filter @madrasti/db run setup",
     "i18n:check": "node scripts/check-i18n.mjs"
   },
   "devDependencies": {

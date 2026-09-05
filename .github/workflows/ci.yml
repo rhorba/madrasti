@@ -63,9 +63,11 @@ jobs:
       # Includes the authorisation suite, which gates every release: it proves
       # a parent cannot reach another family's child.
       - run: pnpm test
-      # `grading` and `timetable` carry the arithmetic a wrong answer in which
-      # is invisible until term starts, so they hold their own coverage gate.
-      - run: pnpm --filter @madrasti/timetable test:coverage
+      # Every workspace now carries a coverage threshold and this runs all of
+      # them. It used to run `timetable` alone while the comment claimed
+      # `grading` too, so the package holding the bulletin arithmetic was the
+      # one gate nobody was enforcing.
+      - run: pnpm test:coverage
 
   e2e:
     name: e2e

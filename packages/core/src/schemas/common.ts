@@ -13,11 +13,28 @@ export const uuidSchema = z.string().uuid({ message: "errors.invalidId" });
 
 export const localeSchema = z.enum(LOCALES);
 
+/**
+ * True only for a date that exists in the calendar.
+ *
+ * `Date.parse` is not enough and was the original bug here: it *rolls over*
+ * rather than refusing, so `2026-02-31` parsed happily as 3 March and
+ * `2025-02-29` as 1 March. A birth date or an enrolment date typed one digit
+ * wrong was accepted and silently stored as a different day. The round trip
+ * through UTC is what actually rejects it.
+ */
+function isRealCalendarDate(value: string): boolean {
+  const [year, month, day] = value.split("-").map(Number) as [number, number, number];
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+  );
+}
+
 /** `YYYY-MM-DD`. Postgres `date` columns; no timezone involved. */
 export const dateStringSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "errors.invalidDate" })
-  .refine((v) => !Number.isNaN(Date.parse(v)), { message: "errors.invalidDate" });
+  .refine(isRealCalendarDate, { message: "errors.invalidDate" });
 
 /** `HH:MM` or `HH:MM:SS`, 24-hour. Postgres `time` columns. */
 export const timeStringSchema = z
@@ -31,11 +48,23 @@ export const emailSchema = z
   .email({ message: "errors.invalidEmail" })
   .max(255);
 
-/** Moroccan numbers, tolerant of the ways people actually type them. */
+/**
+ * Moroccan numbers, tolerant of the ways people actually type them.
+ *
+ * Separators are stripped before validation rather than woven into the
+ * pattern. The pattern that tried to do both accepted only `0612345678` and
+ * `+212612345678` and refused `06 12 34 56 78` — which is how the number is
+ * written on every form in the country. A guardian's phone is required, so
+ * that refusal stopped a secretary enrolling a pupil.
+ *
+ * The stripped form is what is stored: two secretaries typing the same number
+ * differently must not produce two different rows.
+ */
 export const phoneSchema = z
   .string()
   .trim()
-  .regex(/^(\+212|0)[\s.-]?[5-7](\d[\s.-]?){8}$/, { message: "errors.invalidPhone" });
+  .transform((v) => v.replace(/[\s.()-]/g, ""))
+  .refine((v) => /^(\+212|0)[5-7]\d{8}$/.test(v), { message: "errors.invalidPhone" });
 
 export const nonEmptyString = (max: number) => z.string().trim().min(1, "errors.required").max(max);
 
