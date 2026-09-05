@@ -224,10 +224,22 @@ test.describe("homework", () => {
     await expect(page.locator("li").filter({ hasText: title })).toHaveCount(0);
   });
 
-  test("hides the attachment control when storage is not configured", async ({ page }) => {
-    // R2 is optional in development. An inert upload box would invite a
-    // question nobody at the school can answer, so it is absent instead.
-    await expect(page.getByLabel("Pièce jointe")).toHaveCount(0);
+  test("shows the attachment control only when storage can actually work", async ({ page }) => {
+    // R2 is optional. An inert upload box would invite a question nobody at
+    // the school can answer, so it is absent unless uploads really work.
+    //
+    // Asserted in both directions on purpose. This test used to assert only
+    // the absent case, unconditionally — which passed for as long as nobody
+    // had R2 credentials and failed the moment somebody did, in exactly the
+    // one environment where the feature could be tested at all.
+    const configured = Boolean(
+      process.env["R2_ACCOUNT_ID"] &&
+        process.env["R2_ACCESS_KEY_ID"] &&
+        process.env["R2_SECRET_ACCESS_KEY"] &&
+        process.env["R2_BUCKET"]
+    );
+
+    await expect(page.getByLabel("Pièce jointe")).toHaveCount(configured ? 1 : 0);
   });
 });
 
