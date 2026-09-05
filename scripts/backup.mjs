@@ -22,8 +22,8 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, statSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, statSync, unlinkSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -160,10 +160,77 @@ if (command === "restore" || command === "verify") {
   process.exit(0);
 }
 
+/**
+ * Push a dump to R2 — off-vendor, which is the whole requirement.
+ *
+ * Cloudflare rather than Railway on purpose: a backup living beside the thing
+ * it backs up is not a backup. The bucket is the private one the app already
+ * uses for attachments, under a `backups/` prefix, and it is never public.
+ */
+async function uploadToR2(file) {
+  const account = process.env["R2_ACCOUNT_ID"];
+  const key = process.env["R2_ACCESS_KEY_ID"];
+  const secret = process.env["R2_SECRET_ACCESS_KEY"];
+  const bucket = process.env["R2_BUCKET"];
+  if (!account || !key || !secret || !bucket) {
+    throw new Error("R2_* is not configured — a dump with nowhere off-vendor to go");
+  }
+
+  const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
+  const s3 = new S3Client({
+    region: "auto",
+    endpoint: `https://${account}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: key, secretAccessKey: secret },
+  });
+
+  const objectKey = `backups/${basename(file)}`;
+  // Read into a buffer and send `ContentLength` explicitly. A stream without a
+  // known length makes the SDK reach for chunked encoding, which R2 refuses
+  // with `ERR_HTTP_INVALID_HEADER_VALUE` — an error that says nothing about
+  // the cause. A school database is tens of megabytes; the memory is fine.
+  const body = readFileSync(file);
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: objectKey,
+      Body: body,
+      ContentLength: body.length,
+      ContentType: "application/octet-stream",
+    })
+  );
+  return objectKey;
+}
+
+if (command === "to-r2") {
+  // dump -> upload -> delete the local copy, so a file of children's records
+  // does not linger on whatever machine ran the job.
+  const url = process.env["DATABASE_URL"];
+  if (!url) throw new Error("DATABASE_URL is not set");
+  const out = resolve(`backups/madrasti-${stamp()}.dump`);
+  mkdirSync(dirname(out), { recursive: true });
+
+  const { host, port, user, password, database } = parse(url);
+  run(
+    "pg_dump",
+    ["-h", host, "-p", port, "-U", user, "-d", database, "-F", "c", "-f", out, "--no-owner"],
+    { PGPASSWORD: password }
+  );
+  const bytes = statSync(out).size;
+  if (bytes < 1024) throw new Error(`dump is only ${bytes} bytes — that is not a school`);
+
+  const objectKey = await uploadToR2(out);
+  unlinkSync(out);
+  console.log(
+    `backed up ${database} -> r2://${process.env["R2_BUCKET"]}/${objectKey} (${(bytes / 1024 / 1024).toFixed(1)} MB)`
+  );
+  process.exit(0);
+}
+
 console.error(
   `usage:
   node scripts/backup.mjs dump [--out FILE]
   node scripts/backup.mjs restore --from FILE --to URL [--force]
-  node scripts/backup.mjs verify  --from FILE --to URL [--force]`
+  node scripts/backup.mjs verify  --from FILE --to URL [--force]
+  node scripts/backup.mjs to-r2                        # dump -> R2, for cron`
 );
 process.exit(1);

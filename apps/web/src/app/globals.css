@@ -211,8 +211,20 @@ body {
    and a document that must fit one page cannot absorb the 1.0625em the app
    applies globally. Re-stated here so the sheet keeps its measure in `ar`. */
 [dir="rtl"] .bulletin-sheet {
-  font-size: 0.875rem;
-  line-height: 1.6;
+  /*
+   * Arabic reads smaller than Latin at the same px, so it is set up a little —
+   * but only a little. The first full class printed to PDF came out at 46 pages
+   * for 23 pupils: every Arabic bulletin was spilling onto a second sheet,
+   * which on 300 pupils is 300 wasted sheets and every child's report split
+   * across two of them.
+   *
+   * The compensation is therefore in the size only, not the leading. 1.6
+   * line-height over a ten-subject table is what pushed it past A4;
+   * `break-inside: avoid` cannot save a sheet that genuinely does not fit.
+   * Checked by counting pages in the rendered PDF, not by looking at a screen.
+   */
+  font-size: 0.84rem;
+  line-height: 1.4;
 }
 
 .bulletin-table {
