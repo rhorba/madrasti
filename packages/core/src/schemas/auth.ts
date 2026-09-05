@@ -30,7 +30,9 @@ const OBVIOUS_PASSWORDS = new Set([
  * which in a school office is the real risk (security doc §4).
  */
 export const passwordSchema = z
-  .string()
+  // Same reason as `changePasswordSchema`: a missing field is `null`, and the
+  // default type error is an English sentence about types.
+  .string({ required_error: "errors.required", invalid_type_error: "errors.required" })
   .min(PASSWORD_MIN_LENGTH, { message: "errors.passwordTooShort" })
   .max(200)
   .refine((v) => !OBVIOUS_PASSWORDS.has(v.toLowerCase()), {
@@ -47,9 +49,18 @@ export type SignInInput = z.infer<typeof signInSchema>;
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, { message: "errors.required" }),
+    // `required_error` as well as `min`: a field the browser did not send at
+    // all is `null`, and Zod's own "Expected string, received null" would be
+    // handed straight to the user (§10.6). Every message here must be a
+    // translation key.
+    currentPassword: z
+      .string({ required_error: "errors.required", invalid_type_error: "errors.required" })
+      .min(1, { message: "errors.required" }),
     newPassword: passwordSchema,
-    confirmPassword: z.string(),
+    confirmPassword: z.string({
+      required_error: "errors.required",
+      invalid_type_error: "errors.required",
+    }),
   })
   .superRefine((value, ctx) => {
     if (value.newPassword !== value.confirmPassword) {

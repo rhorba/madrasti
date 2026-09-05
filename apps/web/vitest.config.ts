@@ -24,14 +24,19 @@ export default defineConfig({
       // E2E suite drives it, and would say nothing about whether it works.
       include: ["src/lib/**/*.ts", "src/**/actions.ts", "src/**/*-actions.ts"],
       exclude: ["src/**/*.test.ts"],
-      // **A ratchet, not the target.** The DoD asks for 80% (`CLAUDE.md`
-      // §12.4) and this layer is at ~33%: eight of the eleven server-action
-      // files have no unit test, and the admin and timetable queries none
-      // either. See `.logs/issues.md`. The floor is set just under the
-      // measured figure so it cannot slip further while that is worked off,
-      // and it is raised as tests land — the honest number is deliberately
-      // visible in this file rather than hidden behind a narrowed `include`.
-      thresholds: { lines: 33, functions: 69, branches: 81, statements: 33 },
+      // **The DoD figure, met.** `CLAUDE.md` §12.4 asks for 80% and this
+      // layer now stands at 81.2% statements, 86.9% branches. It was 27.8% at
+      // the start of Sprint 9; the gap was eight untested server-action files
+      // and the admin and timetable query layers, and closing it found three
+      // real defects — a driver upgrade that had silently degraded ten
+      // user-facing messages, a raw Zod sentence reaching a user, and a
+      // fixture that passed on the luck of physical row order
+      // (`.logs/issues.md`).
+      //
+      // The floor sits just under the measured figure so it cannot slip, and
+      // the honest number stays visible here rather than hidden behind a
+      // narrowed `include`.
+      thresholds: { lines: 80, functions: 88, branches: 86, statements: 80 },
     },
   },
 });

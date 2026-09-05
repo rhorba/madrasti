@@ -94,7 +94,6 @@
     "passwordMismatch": "Les mots de passe ne correspondent pas.",
     "passwordUnchanged": "Le nouveau mot de passe doit être différent de l'ancien.",
     "invalidCredentials": "E-mail ou mot de passe incorrect.",
-    "accountDisabled": "Ce compte a été désactivé. Contactez l'administration.",
     "tooManyAttempts": "Trop de tentatives. Réessayez dans {minutes} minutes.",
     "notAuthorized": "Vous n'avez pas accès à cette page.",
     "notFound": "Élément introuvable.",
@@ -690,5 +689,15 @@
     "noHomework": "Aucun devoir à venir.",
     "lastMark": "Dernière note",
     "myBulletin": "Mon bulletin"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "body": "Cette page n'existe pas, ou vous n'y avez pas accès.",
+    "home": "Retour à mon espace"
+  },
+  "appError": {
+    "title": "Une erreur est survenue",
+    "body": "Quelque chose s'est mal passé de notre côté. Réessayez ; si cela se reproduit, prévenez l'administration de l'école.",
+    "retry": "Réessayer"
   }
 }

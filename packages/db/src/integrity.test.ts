@@ -36,8 +36,26 @@ async function inRollback(
       throw marker;
     });
   } catch (err) {
-    if (err !== marker) throw err;
+    if (err === marker) return;
+    // Drizzle 0.45 wraps the driver error: the thrown message became
+    // "Failed query: ..." and the Postgres detail naming the violated
+    // constraint moved to `cause`. Every assertion in this file is about the
+    // constraint, so the chain is flattened here rather than teaching sixteen
+    // tests about an ORM's error shape. The same wrapping degraded ten
+    // user-facing messages in `lib/action.ts` — see `.logs/issues.md`.
+    throw new Error(flattenCauses(err), { cause: err });
   }
+}
+
+/** An error's message plus every message in its `cause` chain. */
+function flattenCauses(error: unknown): string {
+  const parts: string[] = [];
+  let current: unknown = error;
+  for (let depth = 0; depth < 5 && current instanceof Error; depth += 1) {
+    parts.push(current.message);
+    current = current.cause;
+  }
+  return parts.length > 0 ? parts.join("\n") : String(error);
 }
 
 async function seededIds() {

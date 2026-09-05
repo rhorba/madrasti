@@ -25,6 +25,20 @@
   --color-sand-200: #e7e4dc;
   --color-sand-300: #d5d1c6;
   --color-sand-500: #8c877a;
+  /*
+   * The step the ramp was missing.
+   *
+   * `sand-500` on white is 3.58:1 and `--text-muted` pointed at it, so every
+   * muted label in the product — the shell header, the language switcher, the
+   * date on a printed bulletin — failed the 4.5:1 that §12.12 and DoD 12
+   * require. axe found it on ten screens at once (`.logs/issues.md`, 9.1).
+   *
+   * `sand-600` is the lightest value on this hue that clears 4.5:1 against all
+   * three grounds the product actually uses: white 5.17, `bg-base` 4.91,
+   * `bg-sunken` 4.58. Darker would have been safer and would also have
+   * flattened the hierarchy muted text exists to create.
+   */
+  --color-sand-600: #726d5e;
   --color-sand-700: #4a463d;
   --color-sand-900: #1f1d18;
 
@@ -88,7 +102,7 @@
 
   --text-primary: var(--color-sand-900);
   --text-secondary: var(--color-sand-700);
-  --text-muted: var(--color-sand-500);
+  --text-muted: var(--color-sand-600);
   --text-on-dark: var(--color-sand-50);
 
   --action-primary: var(--color-green-600);

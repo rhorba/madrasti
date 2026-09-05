@@ -94,7 +94,6 @@
     "passwordMismatch": "The passwords do not match.",
     "passwordUnchanged": "The new password must differ from the old one.",
     "invalidCredentials": "Incorrect email or password.",
-    "accountDisabled": "This account has been disabled. Contact the office.",
     "tooManyAttempts": "Too many attempts. Try again in {minutes} minutes.",
     "notAuthorized": "You do not have access to this page.",
     "notFound": "Item not found.",
@@ -690,5 +689,15 @@
     "noHomework": "No homework coming up.",
     "lastMark": "Latest mark",
     "myBulletin": "My report card"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This page does not exist, or you do not have access to it.",
+    "home": "Back to my space"
+  },
+  "appError": {
+    "title": "Something went wrong",
+    "body": "Something failed on our side. Try again; if it keeps happening, tell the school office.",
+    "retry": "Try again"
   }
 }

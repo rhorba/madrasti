@@ -2,8 +2,8 @@ import type { ActionResult } from "@madrasti/core";
 import type { UserRole } from "@madrasti/core";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
+import { toErrorKey } from "./action-error.js";
 import { audit } from "./audit.js";
-import { isAuthError } from "./auth/errors.js";
 import { type AppSession, assertRole, requireSession } from "./auth/session.js";
 
 /**
@@ -129,40 +129,4 @@ function firstError(flat: {
   fieldErrors: Record<string, string[] | undefined>;
 }) {
   return flat.formErrors[0] ?? Object.values(flat.fieldErrors).flat().filter(Boolean)[0];
-}
-
-/**
- * Map a thrown error to a translation key.
- *
- * Nothing from the database or the driver is ever passed through: a raw
- * Postgres message would leak column and constraint names to a parent, and it
- * is meaningless to the person reading it either way.
- */
-function toErrorKey(error: unknown): string {
-  if (isAuthError(error)) return "errors.notAuthorized";
-
-  const message = error instanceof Error ? error.message : "";
-
-  // Domain code throws errors whose message *is* the translation key —
-  // `validateSlot` and the conflict checks do this. Pass those straight
-  // through rather than flattening them to a generic failure.
-  if (message.startsWith("errors.")) return message;
-
-  // Constraint names are stable and map to something a user can act on.
-  if (message.includes("users_email_unique")) return "errors.emailTaken";
-  if (message.includes("students_massar_unique")) return "errors.massarTaken";
-  if (message.includes("class_groups_year_name_unique")) return "errors.classNameTaken";
-  if (message.includes("subjects_code_unique") || message.includes("subjects_code_key")) {
-    return "errors.subjectCodeTaken";
-  }
-  if (message.includes("terms_year_order_unique")) return "errors.termOrderTaken";
-  if (message.includes("academic_years_one_current")) return "errors.oneCurrentYear";
-  if (message.includes("terms_one_current")) return "errors.oneCurrentTerm";
-  if (message.includes("enrolments_one_active_per_year")) return "errors.alreadyEnrolled";
-  if (message.includes("class_subjects_class_subject_unique"))
-    return "errors.subjectAlreadyInClass";
-  if (message.includes("violates foreign key constraint")) return "errors.stillInUse";
-
-  console.error("[action] unhandled error:", error);
-  return "errors.unexpected";
 }

@@ -74,24 +74,38 @@ beforeAll(async () => {
   if (!first || !other) throw new Error("database is not seeded — run `pnpm db:setup`");
 
   // --- a teacher, plus a class they teach and one they do not ---
-  const [assignment] = await db
+  //
+  // Chosen by searching rather than by taking the first row. An unordered
+  // `.limit(1)` returns whatever Postgres finds first, which changes as rows
+  // are inserted and deleted — so this fixture used to pass on the luck of
+  // physical row order and broke the moment another test file wrote to
+  // `class_subjects`. Some teachers in the seed really do take every class
+  // (EPS, English), and for them "a class they do not teach" does not exist.
+  const allAssignments = await db
     .select({ teacherId: classSubjects.teacherId, classGroupId: classSubjects.classGroupId })
-    .from(classSubjects)
-    .limit(1);
-  if (!assignment) throw new Error("no class_subjects seeded");
+    .from(classSubjects);
+  if (allAssignments.length === 0) throw new Error("no class_subjects seeded");
 
-  const taughtClassIds = new Set(
-    (
-      await db
-        .select({ id: classSubjects.classGroupId })
-        .from(classSubjects)
-        .where(eq(classSubjects.teacherId, assignment.teacherId))
-    ).map((r) => r.id)
-  );
+  const allClassIds = (await db.select({ id: classGroups.id }).from(classGroups)).map((r) => r.id);
 
-  const untaughtClassId = (await db.select({ id: classGroups.id }).from(classGroups)).find(
-    (r) => !taughtClassIds.has(r.id)
-  )?.id;
+  const classesByTeacher = new Map<string, Set<string>>();
+  for (const row of allAssignments) {
+    const set = classesByTeacher.get(row.teacherId) ?? new Set<string>();
+    set.add(row.classGroupId);
+    classesByTeacher.set(row.teacherId, set);
+  }
+
+  const partial = [...classesByTeacher.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .find(([, taught]) => allClassIds.some((id) => !taught.has(id)));
+  if (!partial) throw new Error("every teacher takes every class — fixture unusable");
+
+  const [teacherId, taughtClassIds] = partial;
+  const assignment = {
+    teacherId,
+    classGroupId: [...taughtClassIds].sort()[0] as string,
+  };
+  const untaughtClassId = allClassIds.find((id) => !taughtClassIds.has(id));
   if (!untaughtClassId) throw new Error("every class is taught by the same teacher");
 
   const [taughtStudent] = await db
