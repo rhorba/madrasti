@@ -393,6 +393,29 @@ body {
     padding: 0.8mm 2mm;
   }
 
+  /*
+   * Rebalanced for paper: the remark column gets the width, because it is the
+   * only one whose height depends on how much a teacher wrote.
+   *
+   * The three numeric columns hold "12,50", "4" and "47,00" and never wrap —
+   * they were taking 40% of the sheet for five characters each. Giving that
+   * width to the remarks costs nothing and buys wrapped lines back, which is
+   * where the last splitting bulletin was hiding: one pupil whose teachers all
+   * wrote at length.
+   */
+  .bulletin-table th:first-child,
+  .bulletin-table td:first-child {
+    width: 22%;
+  }
+
+  .bulletin-table .numeric {
+    width: 11%;
+  }
+
+  .bulletin-table .remark {
+    width: 45%;
+  }
+
   .bulletin-sheet section p[dir="auto"] {
     min-height: 6mm;
   }
